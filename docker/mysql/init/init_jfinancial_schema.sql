@@ -4,6 +4,9 @@ SET time_zone = '+08:00';
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS payment_order;
+DROP TABLE IF EXISTS member_subscription;
+DROP TABLE IF EXISTS subscription_plan;
 DROP TABLE IF EXISTS member_watchlist;
 DROP TABLE IF EXISTS portfolio_holding;
 DROP TABLE IF EXISTS member_role;
@@ -117,7 +120,8 @@ CREATE TABLE portfolio_holding (
 INSERT INTO role (id, role_name)
 VALUES
 	(1, 'ROLE_USER'),
-	(2, 'ROLE_ADMIN');
+	(2, 'ROLE_ADMIN'),
+	(3, 'ROLE_PREMIUM');
 
 INSERT INTO member (id, email, password_hash, display_name, created_at)
 VALUES
@@ -151,6 +155,70 @@ INSERT INTO member_watchlist (member_id, market_index_id, added_at)
 VALUES
 	(1, 1, '2026-04-29 00:00:00'),
 	(1, 2, '2026-04-29 00:00:00');
+
+-- ---------------------------------------------------------------
+-- 訂閱方案
+-- ---------------------------------------------------------------
+
+CREATE TABLE subscription_plan (
+	id INT NOT NULL AUTO_INCREMENT,
+	code VARCHAR(20) NOT NULL COMMENT '方案代碼 MONTHLY / ANNUAL',
+	name VARCHAR(50) NOT NULL COMMENT '方案名稱',
+	price_twd INT NOT NULL COMMENT '方案售價（新台幣整數）',
+	duration_days INT NOT NULL COMMENT '訂閱天數',
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+	PRIMARY KEY (id),
+	UNIQUE KEY uk_subscription_plan_code (code)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE member_subscription (
+	id INT NOT NULL AUTO_INCREMENT,
+	member_id INT NOT NULL COMMENT '會員 ID',
+	plan_id INT NOT NULL COMMENT '方案 ID',
+	status ENUM('ACTIVE', 'EXPIRED', 'CANCELLED') NOT NULL DEFAULT 'ACTIVE' COMMENT '訂閱狀態',
+	start_at DATETIME NOT NULL COMMENT '訂閱開始時間',
+	expire_at DATETIME NOT NULL COMMENT '訂閱到期時間',
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+	PRIMARY KEY (id),
+	INDEX idx_member_subscription_member_id (member_id),
+	CONSTRAINT fk_member_subscription_member
+		FOREIGN KEY (member_id) REFERENCES member (id)
+		ON DELETE CASCADE,
+	CONSTRAINT fk_member_subscription_plan
+		FOREIGN KEY (plan_id) REFERENCES subscription_plan (id)
+		ON DELETE RESTRICT
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE payment_order (
+	id INT NOT NULL AUTO_INCREMENT,
+	member_id INT NOT NULL COMMENT '會員 ID',
+	plan_id INT NOT NULL COMMENT '方案 ID',
+	merchant_trade_no VARCHAR(20) NOT NULL COMMENT 'ECPay 商店訂單編號（唯一）',
+	amount INT NOT NULL COMMENT '付款金額（新台幣）',
+	status ENUM('PENDING', 'PAID', 'FAILED') NOT NULL DEFAULT 'PENDING' COMMENT '付款狀態',
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+	paid_at DATETIME DEFAULT NULL COMMENT '付款完成時間',
+	PRIMARY KEY (id),
+	UNIQUE KEY uk_payment_order_merchant_trade_no (merchant_trade_no),
+	INDEX idx_payment_order_member_id (member_id),
+	CONSTRAINT fk_payment_order_member
+		FOREIGN KEY (member_id) REFERENCES member (id)
+		ON DELETE CASCADE,
+	CONSTRAINT fk_payment_order_plan
+		FOREIGN KEY (plan_id) REFERENCES subscription_plan (id)
+		ON DELETE RESTRICT
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO subscription_plan (id, code, name, price_twd, duration_days)
+VALUES
+	(1, 'MONTHLY', '月付方案', 99,  30),
+	(2, 'ANNUAL',  '年付方案', 999, 365);
 
 -- 驗證查詢：檢查各表筆數
 -- SELECT 'role' AS table_name, COUNT(*) AS total_count FROM role

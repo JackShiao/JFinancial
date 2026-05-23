@@ -14,7 +14,7 @@ const navItems = [
 ]
 
 function Navbar() {
-  const { isLoggedIn, userInfo, openModal, logout } = useAuthStore()
+  const { isLoggedIn, userInfo, isPremium, openModal, logout } = useAuthStore()
   const navigate = useNavigate()
 
   const [query, setQuery] = useState('')
@@ -166,8 +166,18 @@ function Navbar() {
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                   >
-                    <i className="bi bi-person-circle me-1" aria-hidden="true" />
+                    <i className={`bi ${isPremium ? 'bi-gem' : 'bi-person-circle'} me-1`}
+                       style={isPremium ? { color: '#ffc107' } : {}}
+                       aria-hidden="true" />
                     {userInfo?.displayName || userInfo?.email || '會員'}
+                    {isPremium && (
+                      <span
+                        className="badge ms-1 text-dark"
+                        style={{ backgroundColor: '#ffc107', fontSize: '0.65em', verticalAlign: 'middle' }}
+                      >
+                        PRO
+                      </span>
+                    )}
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end">
                     <li>
@@ -180,6 +190,12 @@ function Navbar() {
                       <Link className="dropdown-item" to="/portfolio">
                         <i className="bi bi-briefcase me-2" aria-hidden="true" />
                         投資組合
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className="dropdown-item" to="/subscription">
+                        <i className={`bi ${isPremium ? 'bi-star-fill text-warning' : 'bi-star'} me-2`} aria-hidden="true" />
+                        {isPremium ? '訂閱管理' : '升級 Premium'}
                       </Link>
                     </li>
                     <li>

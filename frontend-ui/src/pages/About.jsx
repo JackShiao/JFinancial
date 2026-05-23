@@ -55,7 +55,7 @@ function About() {
         <div className="row featurette">
           <div className="col-md-7">
             <h2 className="featurette-heading fw-normal lh-1">你有發現嗎？</h2>
-            <p className="mt-2 text-body-secondary fs-1">其實網站裡很多張圖片是使用 AI 生成</p>
+            <p className="mt-2 text-body-secondary fs-2">其實網站裡很多張圖片是使用 AI 生成</p>
             <p className="fs-5">
               像是這張圖片就是用 Google Gemini 生成，你應該會發現吉他上面的 Gemini logo，我在每張 AI 生成的圖片都放上了對應的 AI logo。
             </p>
@@ -75,8 +75,8 @@ function About() {
 
             <p className="mt-3">
               圖片來源：
-              <a href="/img/圖片資訊.txt" target="_blank" rel="noopener noreferrer">
-                圖片資訊.txt
+              <a href="/img/圖片資訊.html" target="_blank" rel="noopener noreferrer">
+                圖片資訊
               </a>{' '}
               、Google Gemini <img src="/img/Gemini.png" alt="Google Gemini logo" style={{ width: '30px' }} />、ChatGPT{' '}
               <img src="/img/chatGPT.png" alt="ChatGPT logo" style={{ width: '30px' }} />、Nanobanana.io <span style={{ fontSize: '20px' }}>🍌</span>

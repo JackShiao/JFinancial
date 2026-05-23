@@ -65,7 +65,6 @@ function MarketSection() {
   const [marketData, setMarketData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [lastUpdated, setLastUpdated] = useState(null)
   const navigate = useNavigate()
   const [watchlist, setWatchlist] = useState(new Set())
   const [watchlistLoading, setWatchlistLoading] = useState(new Set())
@@ -78,7 +77,6 @@ function MarketSection() {
       const response = await fetchMarketIndices()
       const items = normalizeItems(response?.data ?? response)
       setMarketData(items.slice(0, 6)) // 取前 6 筆顯示在首頁
-      setLastUpdated(new Date())
     } catch (err) {
       console.error('Failed to fetch market data:', err)
       setError('無法取得最新市場動態，請檢查網路連線後重試。')
@@ -138,21 +136,6 @@ function MarketSection() {
         <div className="d-flex justify-content-between align-items-end mb-4">
           <div>
             <h2 className="fw-bold mb-2">全球市場指數</h2>
-            <div className="text-muted small d-flex align-items-center gap-2">
-              <span>
-                最後更新：
-                {lastUpdated ? lastUpdated.toLocaleTimeString('zh-TW', { hour12: false }) : '--:--'}
-              </span>
-              <button
-                onClick={loadData}
-                disabled={loading}
-                className="btn btn-sm btn-light border rounded-pill d-flex align-items-center justify-content-center"
-                style={{ width: '28px', height: '28px', padding: 0 }}
-                title="手動更新"
-              >
-                <i className={`bi bi-arrow-clockwise ${loading ? 'spin-icon' : ''}`}></i>
-              </button>
-            </div>
           </div>
           <Link
             to="/market"

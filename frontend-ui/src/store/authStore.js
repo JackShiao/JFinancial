@@ -7,6 +7,7 @@ export const useAuthStore = create((set) => ({
   modalType: 'login',
   isLoggedIn: false,
   userInfo: null,
+  isPremium: false,
 
   openModal: (type) =>
     set({
@@ -32,6 +33,7 @@ export const useAuthStore = create((set) => ({
     set({
       isLoggedIn: false,
       userInfo: null,
+      isPremium: false,
     });
   },
 
@@ -41,6 +43,9 @@ export const useAuthStore = create((set) => ({
       userInfo: state.userInfo ? { ...state.userInfo, displayName: newDisplayName } : state.userInfo,
     }));
   },
+
+  // 付款成功後同步 Premium 狀態（不需重新登入）
+  setIsPremium: (value) => set({ isPremium: value }),
 
   // 頁面重整後從 localStorage 恢復登入狀態
   initAuth: () => {
@@ -66,6 +71,7 @@ export const useAuthStore = create((set) => ({
           email: payload.sub,
           displayName: payload.displayName ?? payload.sub,
         },
+        isPremium: Array.isArray(payload.roles) && payload.roles.includes('ROLE_PREMIUM'),
       });
     } catch {
       localStorage.removeItem(TOKEN_KEY);

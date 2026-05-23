@@ -20,7 +20,7 @@
   font-weight: inherit;
   line-height: inherit;
   vertical-align: baseline;
-  color: inherit;
+  color: var(--bs-link-color, #0d6efd);
   text-decoration: none;
   white-space: normal;
   display: inline;

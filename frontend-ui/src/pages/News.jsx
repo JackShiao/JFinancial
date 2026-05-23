@@ -29,7 +29,8 @@ function parseDescriptionLinks(html) {
 function parseNewsTitle(rawTitle) {
   const title = String(rawTitle ?? '').trim()
   if (!title) return { headline: '', source: '' }
-  const match = title.match(/^(.*?)(?:\s[-｜|]\s?)([^-｜|]+)$/)
+  // 貪婪匹配：最後一個分隔符後的 1~15 字視為媒體來源，超過則不拆分
+  const match = title.match(/^(.+)\s[-｜|]\s?([^-｜|]{1,15})$/)
   if (match) return { headline: match[1].trim(), source: match[2].trim() }
   return { headline: title, source: '' }
 }
@@ -111,7 +112,7 @@ function NewsModal({ article, onClose }) {
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-decoration-none text-dark d-flex justify-content-between align-items-start gap-2"
+                        className="news-link d-flex justify-content-between align-items-start gap-2"
                       >
                         <span>{p.headline || item.text}</span>
                         {p.source && !GENERIC_SOURCES.has(p.source) && (
@@ -398,9 +399,13 @@ function News() {
                   />
                 </a>
                 <div className="fw-bold mt-2 mb-1">
-                  <a className="news-link" href={headlineMain.link} target="_blank" rel="noopener noreferrer">
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-start news-link"
+                    onClick={() => setSelectedNews(headlineMain)}
+                  >
                     {headlineMain.title}
-                  </a>
+                  </button>
                   <div className="news-main-time">{formatAdd8Hours(headlineMain.pubDate)}</div>
                 </div>
               </>
