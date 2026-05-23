@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useToastStore } from './toastStore';
 
 const TOKEN_KEY = 'access_token';
 
@@ -35,6 +36,7 @@ export const useAuthStore = create((set) => ({
       userInfo: null,
       isPremium: false,
     });
+    useToastStore.getState().addToast('已成功登出', 'info', 3000);
   },
 
   // 修改顯示名稱後同步更新 store，讓 Navbar 即時反映新名稱

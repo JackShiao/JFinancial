@@ -43,7 +43,12 @@ axiosClient.interceptors.response.use(
   (error) => {
     const status = error?.response?.status
 
-    if (status === 401) {
+    // 登入/註冊本身若 401 代表帳密錯誤，由元件自行處理，不觸發過期提示
+    const AUTH_PATHS = ['/auth/login', '/auth/register']
+    const requestUrl = error?.config?.url ?? ''
+    const isAuthEndpoint = AUTH_PATHS.some((p) => requestUrl.includes(p))
+
+    if (status === 401 && !isAuthEndpoint) {
       useAuthStore.getState().logout()
       useToastStore.getState().addToast('登入已過期，請重新登入', 'warning')
     }
