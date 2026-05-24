@@ -3,8 +3,10 @@ package com.jackshiao.financial.service;
 import com.jackshiao.financial.dto.MarketPriceHistoryDto;
 import com.jackshiao.financial.entity.MarketIndex;
 import com.jackshiao.financial.entity.MarketPriceHistory;
+import com.jackshiao.financial.entity.enums.SubscriptionStatus;
 import com.jackshiao.financial.repository.MarketIndexRepository;
 import com.jackshiao.financial.repository.MarketPriceHistoryRepository;
+import com.jackshiao.financial.repository.MemberSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,7 @@ public class MarketService {
 
     private final MarketIndexRepository marketIndexRepository;
     private final MarketPriceHistoryRepository marketPriceHistoryRepository;
+    private final MemberSubscriptionRepository memberSubscriptionRepository;
     private final RestClient restClient = RestClient.create();
 
     public List<MarketIndex> getAllMarketIndices() {
@@ -587,6 +590,14 @@ public class MarketService {
     }
 
     // ---------------------------------------------------------------
+    // 查詢方法：判斷指定 email 的會員是否有尚未到期的 ACTIVE 訂閱
+    // ---------------------------------------------------------------
+    public boolean isActivePremium(String email) {
+        if (email == null) return false;
+        return memberSubscriptionRepository.existsByMemberEmailAndStatusAndExpireAtAfter(
+                email, SubscriptionStatus.ACTIVE, LocalDateTime.now());
+    }
+
     // 查詢方法：取得指定 symbol 的每日最新快照（最近 N 天，由舊到新）
     // ---------------------------------------------------------------
     public List<MarketPriceHistoryDto> getMarketHistory(String symbol, int limit) {

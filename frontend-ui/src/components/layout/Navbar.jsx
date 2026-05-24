@@ -14,7 +14,7 @@ const navItems = [
 ]
 
 function Navbar() {
-  const { isLoggedIn, userInfo, openModal, logout } = useAuthStore()
+  const { isLoggedIn, userInfo, isPremium, openModal, logout } = useAuthStore()
   const navigate = useNavigate()
 
   const [query, setQuery] = useState('')
@@ -166,8 +166,18 @@ function Navbar() {
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                   >
-                    <i className="bi bi-person-circle me-1" aria-hidden="true" />
+                    <i className={`bi ${isPremium ? 'bi-gem' : 'bi-person-circle'} me-1`}
+                       style={isPremium ? { color: '#ffc107' } : {}}
+                       aria-hidden="true" />
                     {userInfo?.displayName || userInfo?.email || '會員'}
+                    {isPremium && (
+                      <span
+                        className="badge ms-1 text-dark"
+                        style={{ backgroundColor: '#ffc107', fontSize: '0.65em', verticalAlign: 'middle' }}
+                      >
+                        PRO
+                      </span>
+                    )}
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end">
                     <li>
@@ -183,6 +193,12 @@ function Navbar() {
                       </Link>
                     </li>
                     <li>
+                      <Link className="dropdown-item" to="/subscription">
+                        <i className={`bi ${isPremium ? 'bi-star-fill text-warning' : 'bi-star'} me-2`} aria-hidden="true" />
+                        {isPremium ? '訂閱管理' : '升級 Premium'}
+                      </Link>
+                    </li>
+                    <li>
                       <Link className="dropdown-item" to="/profile">
                         <i className="bi bi-gear me-2" aria-hidden="true" />
                         個人設定
@@ -190,7 +206,7 @@ function Navbar() {
                     </li>
                     <li><hr className="dropdown-divider" /></li>
                     <li>
-                      <button type="button" className="dropdown-item text-danger" onClick={logout}>
+                      <button type="button" className="dropdown-item text-danger" onClick={() => logout()}>
                         <i className="bi bi-box-arrow-right me-2" aria-hidden="true" />
                         登出
                       </button>

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useToastStore } from './toastStore';
 
 const TOKEN_KEY = 'access_token';
 
@@ -7,6 +8,7 @@ export const useAuthStore = create((set) => ({
   modalType: 'login',
   isLoggedIn: false,
   userInfo: null,
+  isPremium: false,
 
   openModal: (type) =>
     set({
@@ -27,12 +29,16 @@ export const useAuthStore = create((set) => ({
     });
   },
 
-  logout: () => {
+  logout: (silent = false) => {
     localStorage.removeItem(TOKEN_KEY);
     set({
       isLoggedIn: false,
       userInfo: null,
+      isPremium: false,
     });
+    if (!silent) {
+      useToastStore.getState().addToast('已成功登出', 'info', 3000);
+    }
   },
 
   // 修改顯示名稱後同步更新 store，讓 Navbar 即時反映新名稱
@@ -41,6 +47,9 @@ export const useAuthStore = create((set) => ({
       userInfo: state.userInfo ? { ...state.userInfo, displayName: newDisplayName } : state.userInfo,
     }));
   },
+
+  // 付款成功後同步 Premium 狀態（不需重新登入）
+  setIsPremium: (value) => set({ isPremium: value }),
 
   // 頁面重整後從 localStorage 恢復登入狀態
   initAuth: () => {
@@ -66,6 +75,7 @@ export const useAuthStore = create((set) => ({
           email: payload.sub,
           displayName: payload.displayName ?? payload.sub,
         },
+        isPremium: Array.isArray(payload.roles) && payload.roles.includes('ROLE_PREMIUM'),
       });
     } catch {
       localStorage.removeItem(TOKEN_KEY);

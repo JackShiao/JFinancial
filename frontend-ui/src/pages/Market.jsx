@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Line } from 'react-chartjs-2'
 import { fetchMarketHistory, fetchMarketIndices } from '../api/marketApi'
 import { addToWatchlistAPI, getWatchlistAPI, removeFromWatchlistAPI } from '../api/watchlistApi'
@@ -157,6 +157,7 @@ function Market() {
   const [chartData, setChartData] = useState({ key: '', labels: [], prices: [] })
   const [loadingPrices, setLoadingPrices] = useState(true)
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+  const isPremium = useAuthStore((state) => state.isPremium)
   const [watchlist, setWatchlist] = useState(new Set())
   const [watchlistLoading, setWatchlistLoading] = useState(new Set())
 
@@ -186,7 +187,7 @@ function Market() {
 
     let cancelled = false
 
-    fetchMarketHistory(symbol, 30)
+    fetchMarketHistory(symbol, isPremium ? 365 : 30)
       .then((data) => {
         if (cancelled) return
         setChartData({
@@ -200,7 +201,7 @@ function Market() {
       })
 
     return () => { cancelled = true }
-  }, [activeKey])
+  }, [activeKey, isPremium])
 
   // 登入狀態變更時重新載入追蹤清單
   useEffect(() => {
@@ -321,7 +322,6 @@ function Market() {
             <h3 className="fs-6 text-muted">債券市場</h3>
             <div className="d-flex flex-column gap-1 mb-3">
               {[
-                { key: 'twb20', label: '台灣公債' },
                 { key: 'usb10', label: '美國公債' },
                 { key: 'jpb10', label: '日本公債' },
               ].map(({ key, label }) => (
@@ -406,6 +406,19 @@ function Market() {
             )}
           </div>
 
+          {/* Premium 升級提示 */}
+          {!isPremium && (
+            <div className="alert alert-info d-flex align-items-center justify-content-between mb-4 py-2">
+              <span>
+                <i className="bi bi-stars me-2" />
+                免費版僅顯示 30 筆歷史資料。升級 <strong>Premium</strong> 可查看完整 365 筆走勢。
+              </span>
+              <Link to="/subscription" className="btn btn-sm btn-primary ms-3 text-nowrap">
+                升級 Premium
+              </Link>
+            </div>
+          )}
+
           {current.type === 'stock' && (() => {
             if (!current.symbol) {
               return (
@@ -445,12 +458,12 @@ function Market() {
 
             return (
               <div className="card mb-4">
-                <div className="card-body">
+                <div className="card-body text-center">
                   <h3 className="card-title fs-6 text-muted mb-3">
                     <span className="badge bg-secondary me-2">{liveEntry.symbol}</span>
                     {liveEntry.name}
                   </h3>
-                  <div className="d-flex align-items-end gap-3 flex-wrap">
+                  <div className="d-flex justify-content-center align-items-end gap-3 flex-wrap">
                     <span className="fs-2 fw-bold font-monospace">
                       {price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
@@ -511,12 +524,12 @@ function Market() {
               : null
             return (
               <div className="card mb-4">
-                <div className="card-body">
+                <div className="card-body text-center">
                   <h3 className="card-title fs-6 text-muted mb-3">
                     <span className="badge bg-secondary me-2">{liveEntry.symbol}</span>
                     {liveEntry.name}
                   </h3>
-                  <div className="d-flex align-items-end gap-3 flex-wrap">
+                  <div className="d-flex justify-content-center align-items-end gap-3 flex-wrap">
                     <span className="fs-2 fw-bold font-monospace">
                       {yieldVal.toFixed(2)}%
                     </span>
@@ -566,12 +579,12 @@ function Market() {
               : null
             return (
               <div className="card mb-4">
-                <div className="card-body">
+                <div className="card-body text-center">
                   <h3 className="card-title fs-6 text-muted mb-3">
                     <span className="badge bg-secondary me-2">{liveEntry.symbol}</span>
                     {liveEntry.name}
                   </h3>
-                  <div className="d-flex align-items-end gap-3 flex-wrap">
+                  <div className="d-flex justify-content-center align-items-end gap-3 flex-wrap">
                     <span className="fs-2 fw-bold font-monospace">
                       {rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                     </span>

@@ -1,13 +1,14 @@
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import './AuthModals.css'
 import { useAuthStore } from '../../store/authStore'
+import { useToastStore } from '../../store/toastStore'
 import { loginAPI, registerAPI } from '../../api/authApi'
 
 const passwordRule =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/
 
-const REGISTER_REDIRECT_DELAY_MS = 1500
+const REGISTER_REDIRECT_DELAY_MS = 5000
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -23,6 +24,7 @@ function initialRegister() {
 
 function AuthModals() {
   const { isModalOpen, modalType, closeModal, openModal, loginSuccess: storeLoginSuccess } = useAuthStore()
+  const { addToast } = useToastStore()
 
   const [loginForm, setLoginForm] = useState(initialLogin)
   const [registerForm, setRegisterForm] = useState(initialRegister)
@@ -30,11 +32,12 @@ function AuthModals() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false)
   const [loginErrors, setLoginErrors] = useState({})
   const [registerErrors, setRegisterErrors] = useState({})
-  const [loginApiError, setLoginApiError] = useState('')
-  const [registerApiError, setRegisterApiError] = useState('')
   const [registerSuccess, setRegisterSuccess] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerCountdown, setRegisterCountdown] = useState(0)
+  const countdownRef = useRef(null)
+  const redirectTimerRef = useRef(null)
 
   const loginPasswordType = useMemo(
     () => (showLoginPassword ? 'text' : 'password'),
@@ -49,16 +52,23 @@ function AuthModals() {
   function resetLoginForm() {
     setLoginForm(initialLogin)
     setLoginErrors({})
-    setLoginApiError('')
     setShowLoginPassword(false)
   }
 
   function resetRegisterForm() {
     setRegisterForm(initialRegister)
     setRegisterErrors({})
-    setRegisterApiError('')
     setRegisterSuccess('')
     setShowRegisterPassword(false)
+    setRegisterCountdown(0)
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current)
+      countdownRef.current = null
+    }
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current)
+      redirectTimerRef.current = null
+    }
   }
 
   async function handleLoginSubmit(event) {
@@ -76,7 +86,6 @@ function AuthModals() {
     }
 
     setLoginErrors(errors)
-    setLoginApiError('')
     if (Object.keys(errors).length > 0) return
 
     setLoginLoading(true)
@@ -88,8 +97,9 @@ function AuthModals() {
       )
       closeModal()
       resetLoginForm()
+      addToast(`歡迎回來，${result.data.displayName ?? result.data.email}！`, 'success', 3000)
     } catch (err) {
-      setLoginApiError(err?.response?.data?.message ?? '登入失敗，請稍後再試')
+      addToast(err?.message ?? '登入失敗，請確認帳號密碼後再試。', 'danger', 4000)
     } finally {
       setLoginLoading(false)
     }
@@ -126,7 +136,6 @@ function AuthModals() {
     }
 
     setRegisterErrors(errors)
-    setRegisterApiError('')
     if (Object.keys(errors).length > 0) return
 
     setRegisterLoading(true)
@@ -136,13 +145,28 @@ function AuthModals() {
         username: registerForm.username,
         password: registerForm.password,
       })
-      setRegisterSuccess('註冊成功！請登入您的帳號。')
-      setTimeout(() => {
+      const totalSeconds = REGISTER_REDIRECT_DELAY_MS / 1000
+      setRegisterCountdown(totalSeconds)
+      setRegisterSuccess('registered')
+
+      countdownRef.current = setInterval(() => {
+        setRegisterCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownRef.current)
+            countdownRef.current = null
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      redirectTimerRef.current = setTimeout(() => {
+        redirectTimerRef.current = null
         resetRegisterForm()
         openModal('login')
       }, REGISTER_REDIRECT_DELAY_MS)
     } catch (err) {
-      setRegisterApiError(err?.response?.data?.message ?? '註冊失敗，請稍後再試')
+      addToast(err?.message ?? '註冊失敗，請稍後再試。', 'danger', 4000)
     } finally {
       setRegisterLoading(false)
     }
@@ -240,12 +264,6 @@ function AuthModals() {
                         </label>
                       </div>
                     </div>
-
-                    {loginApiError && (
-                      <div className="alert alert-danger py-2 mb-3" role="alert">
-                        {loginApiError}
-                      </div>
-                    )}
 
                     <button
                       className="w-100 mb-2 btn btn-lg rounded-3 btn-primary"
@@ -409,12 +427,6 @@ function AuthModals() {
                       </div>
                     </div>
 
-                    {registerApiError && (
-                      <div className="alert alert-danger py-2 mb-3" role="alert">
-                        {registerApiError}
-                      </div>
-                    )}
-
                     <button
                       className="w-100 mb-2 btn btn-lg rounded-3 btn-primary"
                       type="submit"
@@ -428,9 +440,12 @@ function AuthModals() {
                       ) : '註冊'}
                     </button>
 
-                    {registerSuccess && (
+                    {registerSuccess === 'registered' && (
                       <div className="alert alert-success py-2 mb-2" role="alert">
-                        {registerSuccess}
+                        <i className="bi bi-check-circle-fill me-2" aria-hidden="true" />
+                        註冊成功！將在{' '}
+                        <strong>{registerCountdown}</strong>{' '}
+                        秒後自動跳轉至登入頁面。
                       </div>
                     )}
                     <small className="text-body-secondary d-flex justify-content-center">

@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { useAuthStore } from '../store/authStore'
+import { useToastStore } from '../store/toastStore'
 
 const axiosClient = axios.create({
   // 透過 Vite proxy 轉發到 http://localhost:8080
@@ -41,9 +43,14 @@ axiosClient.interceptors.response.use(
   (error) => {
     const status = error?.response?.status
 
-    if (status === 401) {
-      // TODO: 未來可在這裡統一導向登入頁或觸發重新整理 token
-      console.warn('Unauthorized (401), please login again.')
+    // 登入/註冊本身若 401 代表帳密錯誤，由元件自行處理，不觸發過期提示
+    const AUTH_PATHS = ['/auth/login', '/auth/register']
+    const requestUrl = error?.config?.url ?? ''
+    const isAuthEndpoint = AUTH_PATHS.some((p) => requestUrl.includes(p))
+
+    if (status === 401 && !isAuthEndpoint) {
+      useAuthStore.getState().logout(true)
+      useToastStore.getState().addToast('登入已過期，請重新登入', 'warning')
     }
 
     return Promise.reject({
