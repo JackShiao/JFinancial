@@ -15,6 +15,7 @@ import SubscriptionResult from './pages/SubscriptionResult'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { getSubscriptionStatus } from './api/subscriptionApi'
+import BackToTopButton from './components/layout/BackToTopButton'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -60,6 +61,7 @@ function App() {
       <Footer />
       <AuthModals />
       <ToastContainer />
+      <BackToTopButton />
     </BrowserRouter>
   )
 }

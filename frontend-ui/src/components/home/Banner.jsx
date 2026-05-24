@@ -76,7 +76,10 @@ function Banner() {
                   alt={slide.indicatorLabel}
                   loading="lazy"
                   onError={(event) => {
-                    event.currentTarget.src = '/img/default.png'
+                    const img = event.currentTarget
+                    if (img.dataset.fallbackApplied === 'true') return
+                    img.dataset.fallbackApplied = 'true'
+                    img.src = '/img/default.png'
                   }}
                 />
               </div>

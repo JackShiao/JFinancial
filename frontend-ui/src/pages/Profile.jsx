@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { updateDisplayNameAPI, deleteAccountAPI, changePasswordAPI } from '../api/memberApi'
+import { getSubscriptionStatus } from '../api/subscriptionApi'
 import { useAuthStore } from '../store/authStore'
 import { useToastStore } from '../store/toastStore'
 
@@ -15,6 +16,10 @@ function Profile() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const [subStatus, setSubStatus] = useState(null)
+  const [subLoading, setSubLoading] = useState(true)
 
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
   const [pwSubmitting, setPwSubmitting] = useState(false)
@@ -34,6 +39,16 @@ function Profile() {
       setDisplayName(userInfo.displayName)
     }
   }, [userInfo])
+
+  // 取得訂閱狀態
+  useEffect(() => {
+    if (!isLoggedIn) return
+    setSubLoading(true)
+    getSubscriptionStatus()
+      .then((res) => setSubStatus(res?.data ?? null))
+      .catch(() => setSubStatus(null))
+      .finally(() => setSubLoading(false))
+  }, [isLoggedIn])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -126,6 +141,44 @@ function Profile() {
         </div>
       </div>
 
+      {/* 訂閱狀態 */}
+      <div className="card mb-4">
+        <div className="card-header">訂閱狀態</div>
+        <div className="card-body">
+          {subLoading ? (
+            <div className="d-flex align-items-center gap-2 text-muted">
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+              載入中…
+            </div>
+          ) : subStatus?.active ? (
+            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div>
+                <span className="badge bg-warning text-dark me-2">
+                  <i className="bi bi-stars me-1" />Premium
+                </span>
+                訂閱有效期至：
+                <strong className="ms-1">
+                  {new Date(subStatus.expireAt).toLocaleDateString('zh-TW')}
+                </strong>
+              </div>
+              <Link to="/subscription" className="btn btn-outline-secondary btn-sm">
+                管理訂閱
+              </Link>
+            </div>
+          ) : (
+            <div className="text-center py-1">
+              <p className="mb-3">
+                <span className="badge bg-secondary me-2">免費方案</span>
+                目前為免費會員，升級可查看完整 365 天歷史走勢。
+              </p>
+              <Link to="/subscription" className="btn btn-primary btn-sm">
+                <i className="bi bi-stars me-1" />升級 Premium
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* 修改顯示名稱 */}
       <div className="card">
         <div className="card-header">修改顯示名稱</div>
@@ -138,7 +191,7 @@ function Profile() {
               <input
                 id="displayName"
                 type="text"
-                className="form-control"
+                className="form-control text-center"
                 maxLength={50}
                 value={displayName}
                 onChange={(e) => {
@@ -172,7 +225,7 @@ function Profile() {
               <input
                 id="currentPassword"
                 type="password"
-                className={`form-control${pwInvalidFields.has('current') ? ' is-invalid' : ''}`}
+                className={`form-control text-center${pwInvalidFields.has('current') ? ' is-invalid' : ''}`}
                 autoComplete="current-password"
                 value={pwForm.current}
                 onChange={(e) => { setPwForm({ ...pwForm, current: e.target.value }); setPwInvalidFields((p) => { const n = new Set(p); n.delete('current'); return n }) }}
@@ -184,7 +237,7 @@ function Profile() {
               <input
                 id="newPassword"
                 type="password"
-                className={`form-control${pwInvalidFields.has('next') ? ' is-invalid' : ''}`}
+                className={`form-control text-center${pwInvalidFields.has('next') ? ' is-invalid' : ''}`}
                 autoComplete="new-password"
                 minLength={8}
                 value={pwForm.next}
@@ -198,7 +251,7 @@ function Profile() {
               <input
                 id="confirmPassword"
                 type="password"
-                className={`form-control${pwInvalidFields.has('confirm') ? ' is-invalid' : ''}`}
+                className={`form-control text-center${pwInvalidFields.has('confirm') ? ' is-invalid' : ''}`}
                 autoComplete="new-password"
                 value={pwForm.confirm}
                 onChange={(e) => { setPwForm({ ...pwForm, confirm: e.target.value }); setPwInvalidFields((p) => { const n = new Set(p); n.delete('confirm'); return n }) }}
@@ -224,7 +277,7 @@ function Profile() {
         <div className="card-header text-danger">危險區域</div>
         <div className="card-body">
           <p className="text-muted mb-3">
-            刪除帳號後，所有資料（包含追蹤清單）將永久移除，且<strong>無法復原</strong>。
+            刪除帳號後，所有資料（包含追蹤清單）將永久移除，且<strong style={{ color: 'red' }}>無法復原</strong>。 <br />
             請輸入您的 Email 確認後再刪除。
           </p>
           <div className="mb-3">
@@ -234,7 +287,7 @@ function Profile() {
             <input
               id="deleteConfirm"
               type="email"
-              className="form-control"
+              className="form-control text-center"
               placeholder={userInfo?.email}
               value={deleteConfirm}
               onChange={(e) => {
@@ -254,7 +307,7 @@ function Profile() {
             type="button"
             className="btn btn-danger"
             disabled={deleting || deleteConfirm !== userInfo?.email}
-            onClick={handleDeleteAccount}
+            onClick={() => setShowDeleteModal(true)}
           >
             {deleting
               ? <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />刪除中…</>
@@ -262,6 +315,53 @@ function Profile() {
           </button>
         </div>
       </div>
+
+      {/* 刪除帳號二次確認 Modal */}
+      {showDeleteModal && (
+        <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header border-danger">
+                <h5 className="modal-title text-danger">
+                  <i className="bi bi-exclamation-triangle-fill me-2" />
+                  確認刪除帳號
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                />
+              </div>
+              <div className="modal-body">
+                <p className="mb-1">你即將永久刪除帳號：</p>
+                <p className="fw-bold">{userInfo?.email}</p>
+                <p className="text-danger mb-0">此操作<strong>無法復原</strong>，所有資料將一併刪除。確定要繼續嗎？</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={deleting}
+                  onClick={handleDeleteAccount}
+                >
+                  {deleting
+                    ? <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />刪除中…</>
+                    : <><i className="bi bi-trash me-2" />確認永久刪除</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

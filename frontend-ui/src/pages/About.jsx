@@ -14,7 +14,10 @@ function About() {
             alt="關於大圖"
             loading="lazy"
             onError={(event) => {
-              event.currentTarget.src = '/img/default.png'
+              const img = event.currentTarget
+              if (img.dataset.fallbackApplied === 'true') return
+              img.dataset.fallbackApplied = 'true'
+              img.src = '/img/default.png'
             }}
           />
           <div className="container">
@@ -35,7 +38,10 @@ function About() {
               loading="lazy"
               style={{ width: '400px', height: '500px', objectFit: 'cover', objectPosition: 'center 90%' }}
               onError={(event) => {
-                event.currentTarget.src = '/img/default.png'
+                const img = event.currentTarget
+                if (img.dataset.fallbackApplied === 'true') return
+                img.dataset.fallbackApplied = 'true'
+                img.src = '/img/default.png'
               }}
             />
           </div>
@@ -59,10 +65,10 @@ function About() {
             <p className="fs-5">
               像是這張圖片就是用 Google Gemini 生成，你應該會發現吉他上面的 Gemini logo，我在每張 AI 生成的圖片都放上了對應的 AI logo。
             </p>
-            <p className="mt-5 fs-5">財經網總共有 11 張圖片是由 AI 生成，你能找到藏在圖片裡所有的 logo 嗎？</p>
+            <p className="mt-5 fs-6">財經網總共有 11 張圖片是由 AI 生成，你能找到藏在圖片裡所有的 logo 嗎？</p>
 
             <div className="d-flex align-items-center gap-3">
-              <button type="button" className="btn btn-light" onClick={() => setShowAnswer(true)}>
+              <button type="button" className="btn btn-light ms-5" onClick={() => setShowAnswer(true)}>
                 解答
               </button>
               {showAnswer && (
@@ -91,7 +97,10 @@ function About() {
               loading="lazy"
               style={{ objectFit: 'cover' }}
               onError={(event) => {
-                event.currentTarget.src = '/img/default.png'
+                const img = event.currentTarget
+                if (img.dataset.fallbackApplied === 'true') return
+                img.dataset.fallbackApplied = 'true'
+                img.src = '/img/default.png'
               }}
             />
           </div>

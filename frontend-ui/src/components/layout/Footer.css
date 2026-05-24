@@ -1,6 +1,11 @@
-.site-footer .container {
-  width: auto;
-  padding: 0 15px;
+.footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-link:hover {
+  color: #fff;
 }
 /* 
   ========================================

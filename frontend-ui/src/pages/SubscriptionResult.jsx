@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getSubscriptionStatus } from '../api/subscriptionApi'
 import { useAuthStore } from '../store/authStore'
 
@@ -11,10 +11,13 @@ import { useAuthStore } from '../store/authStore'
  */
 export default function SubscriptionResult() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [status, setStatus] = useState(null)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const setIsPremium = useAuthStore((s) => s.setIsPremium)
   const [loading, setLoading] = useState(isLoggedIn)
+  const [hasError, setHasError] = useState(false)
+  const [countdown, setCountdown] = useState(5) // 初始值即為 5，effect 只負責遞減
   const rtnMsg = searchParams.get('RtnMsg')
 
   useEffect(() => {
@@ -24,11 +27,42 @@ export default function SubscriptionResult() {
         setStatus(res.data)
         if (res.data?.active) setIsPremium(true)
       })
-      .catch(() => {})
+      .catch(() => {
+        setHasError(true)
+      })
       .finally(() => setLoading(false))
   }, [isLoggedIn, setIsPremium])
 
+  // 付款結果確認後，倒數 5 秒自動跳轉
+  useEffect(() => {
+    if (loading || !isLoggedIn || hasError) return
+    const target = status?.active ? '/market' : '/subscription'
+    let count = 5
+    const timer = setInterval(() => {
+      count -= 1
+      setCountdown(count)
+      if (count <= 0) {
+        clearInterval(timer)
+        navigate(target, { replace: true })
+      }
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [loading, status, isLoggedIn, hasError, navigate])
+
   const isPaid = status?.active
+
+  if (!loading && hasError) {
+    return (
+      <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
+        <div className="display-1 mb-3">⚠️</div>
+        <h2 className="fw-bold">訂閱狀態驗證失敗</h2>
+        <p className="text-muted mt-2">無法確認付款結果，請稍後重新整理頁面，或前往訂閱頁面查看狀態。</p>
+        <Link to="/subscription" className="btn btn-outline-primary mt-3">
+          前往訂閱頁面
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
@@ -56,6 +90,7 @@ export default function SubscriptionResult() {
           <Link to="/market" className="btn btn-primary mt-3">
             前往市場頁查看進階圖表
           </Link>
+          <p className="text-muted small mt-3">{countdown} 秒後自動跳轉…</p>
         </>
       ) : (
         <>
@@ -65,6 +100,7 @@ export default function SubscriptionResult() {
           <Link to="/subscription" className="btn btn-outline-primary mt-3">
             返回訂閱頁面
           </Link>
+          <p className="text-muted small mt-3">{countdown} 秒後自動跳轉…</p>
         </>
       )}
     </div>

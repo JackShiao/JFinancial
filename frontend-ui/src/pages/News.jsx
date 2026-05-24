@@ -242,7 +242,7 @@ function pickImageUrl(item) {
   return ''
 }
 
-function CategoryNewsCard({ title, topicUrl, items, isLoading, fallbackImage, onArticleClick }) {
+function CategoryNewsCard({ title, topicUrl, items, isLoading, fallbackImage, onArticleClick, hasError = false }) {
   const main = items[0]
   const subItems = items.slice(1, 4)
   const mainImage = pickImageUrl(main)
@@ -258,7 +258,17 @@ function CategoryNewsCard({ title, topicUrl, items, isLoading, fallbackImage, on
 
       {isLoading && <div className="text-muted py-5 text-center">新聞載入中...</div>}
 
-      {!isLoading && !main && <div className="text-muted py-5 text-center">暫無新聞</div>}
+      {!isLoading && !main && (
+        <div className="text-muted py-5 text-center">
+          {hasError ? (
+            <>
+              <i className="bi bi-wifi-off fs-2 d-block mb-2" />
+              <p className="mb-1">新聞資料載入失敗</p>
+              <p className="small mb-0">請稍後重新整理</p>
+            </>
+          ) : '暫無新聞'}
+        </div>
+      )}
 
       {!isLoading && main && (
         <>
@@ -272,7 +282,12 @@ function CategoryNewsCard({ title, topicUrl, items, isLoading, fallbackImage, on
               className="news-image"
               loading="lazy"
               alt={`${title}預覽圖`}
-              onError={(event) => { event.currentTarget.src = '/img/default.png' }}
+              onError={(event) => {
+                const img = event.currentTarget
+                if (img.dataset.fallbackApplied === 'true') return
+                img.dataset.fallbackApplied = 'true'
+                img.src = '/img/default.png'
+              }}
             />
           </button>
           <div className="fw-bold mt-2 mb-1 border-bottom pb-2">
@@ -318,11 +333,13 @@ function News() {
     scitech: [],
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [selectedNews, setSelectedNews] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
 
   const loadNews = useCallback(async (forceRefresh = false) => {
     setIsLoading(true)
+    setHasError(false)
     try {
       const topicKeys = ['headline', ...categoryCards.map((item) => item.key)]
       const results = await Promise.all(
@@ -338,7 +355,7 @@ function News() {
       setNewsMap(Object.fromEntries(results))
       setLastUpdated(new Date())
     } catch {
-      // 靜默失敗，保留舊資料
+      setHasError(true)
     } finally {
       setIsLoading(false)
     }
@@ -355,7 +372,7 @@ function News() {
   return (
     <main className="container py-3 news-page">
       <div className="d-flex justify-content-between align-items-center mb-2">
-        <h1 className="h3 mb-0">新聞總覽</h1>
+        <h1 className="h2 mb-0">新聞總覽</h1>
         <div className="d-flex align-items-center gap-2 text-muted small">
           {lastUpdated && (
             <span>最後更新：{lastUpdated.toLocaleTimeString('zh-TW', { hour12: false })}</span>
@@ -394,7 +411,10 @@ function News() {
                     loading="lazy"
                     alt="頭條新聞預覽圖"
                     onError={(event) => {
-                      event.currentTarget.src = '/img/default.png'
+                      const img = event.currentTarget
+                      if (img.dataset.fallbackApplied === 'true') return
+                      img.dataset.fallbackApplied = 'true'
+                      img.src = '/img/default.png'
                     }}
                   />
                 </a>
@@ -409,8 +429,16 @@ function News() {
                   <div className="news-main-time">{formatAdd8Hours(headlineMain.pubDate)}</div>
                 </div>
               </>
-            ) : (
+            ) : isLoading ? (
               <div className="text-muted py-5 text-center w-100">頭條新聞載入中...</div>
+            ) : hasError ? (
+              <div className="text-center py-5 w-100">
+                <i className="bi bi-wifi-off fs-2 d-block mb-2 text-muted" />
+                <p className="text-muted mb-1">頭條新聞載入失敗</p>
+                <p className="text-muted small mb-0">請稍後重新整理</p>
+              </div>
+            ) : (
+              <div className="text-muted py-5 text-center w-100">目前暫無頭條新聞</div>
             )}
           </div>
 
@@ -444,6 +472,7 @@ function News() {
               isLoading={isLoading}
               fallbackImage={category.fallbackImage}
               onArticleClick={setSelectedNews}
+              hasError={hasError}
             />
           </div>
         ))}
@@ -459,6 +488,7 @@ function News() {
               isLoading={isLoading}
               fallbackImage={category.fallbackImage}
               onArticleClick={setSelectedNews}
+              hasError={hasError}
             />
           </div>
         ))}

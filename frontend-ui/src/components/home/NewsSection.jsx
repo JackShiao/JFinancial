@@ -96,7 +96,7 @@ function pickImageUrl(item) {
   return ''
 }
 
-function NewsCard({ title, topicUrl, items, isLoading, fallbackImage }) {
+function NewsCard({ title, topicUrl, items, isLoading, fallbackImage, hasError = false }) {
   const main = items[0]
   const subItems = items.slice(1, 4)
   const mainImage = pickImageUrl(main)
@@ -142,7 +142,17 @@ function NewsCard({ title, topicUrl, items, isLoading, fallbackImage }) {
             <i className="bi bi-caret-right-fill" />
           </h4>
         </a>
-        <div className="text-muted py-5 text-center">目前暫無新聞資料</div>
+        <div className="text-muted py-5 text-center">
+          {hasError
+            ? (
+              <>
+                <i className="bi bi-wifi-off fs-2 d-block mb-2" aria-hidden="true" />
+                <p className="mb-1">新聞資料載入失敗</p>
+                <p className="small mb-0">請稍後重新整理</p>
+              </>
+            )
+            : '目前暫無新聞資料'}
+        </div>
       </div>
     )
   }
@@ -169,7 +179,10 @@ function NewsCard({ title, topicUrl, items, isLoading, fallbackImage }) {
             loading="lazy"
             alt={`${title}預覽圖`}
             onError={(event) => {
-              event.currentTarget.src = fallbackImage || '/img/default.png'
+              const img = event.currentTarget
+              if (img.dataset.fallbackApplied === 'true') return
+              img.dataset.fallbackApplied = 'true'
+              img.src = fallbackImage || '/img/default.png'
             }}
           />
         ) : (
@@ -220,6 +233,7 @@ function NewsSection() {
     business: [],
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -243,6 +257,7 @@ function NewsSection() {
           return
         }
 
+        setHasError(true)
         setNewsMap({
           international: [],
           taiwan: [],
@@ -276,6 +291,7 @@ function NewsSection() {
                 items={newsMap[category.key] || []}
                 isLoading={isLoading}
                 fallbackImage={category.fallbackImage}
+                hasError={hasError}
               />
             </div>
           ))}

@@ -140,18 +140,45 @@ function Navbar() {
                   {results.length === 0 ? (
                     <li className="px-3 py-2 text-muted small">找不到符合的指數</li>
                   ) : (
-                    results.slice(0, 8).map((item) => (
-                      <li key={item.id ?? item.symbol}>
-                        <button
-                          type="button"
-                          className="btn btn-link text-dark text-decoration-none w-100 text-start px-3 py-2 small"
-                          onClick={() => handleSelectResult(item)}
-                        >
-                          <span className="fw-bold">{item.symbol}</span>
-                          <span className="text-muted ms-2">{item.name}</span>
-                        </button>
+                    <>
+                      {results.slice(0, 8).map((item) => {
+                        const change = Number(item.changePoint ?? item.change_point ?? 0)
+                        const price = Number(item.currentPrice ?? item.current_price ?? 0)
+                        const isUp = change > 0
+                        const isDown = change < 0
+                        const changeClass = isUp ? 'text-danger' : isDown ? 'text-success' : 'text-muted'
+                        const changePrefix = isUp ? '+' : ''
+                        return (
+                          <li key={item.id ?? item.symbol}>
+                            <button
+                              type="button"
+                              className="btn btn-link text-dark text-decoration-none w-100 text-start px-3 py-2 small navbar-search-result-item"
+                              onClick={() => handleSelectResult(item)}
+                            >
+                              <span className="navbar-search-result-info">
+                                <span className="fw-bold navbar-search-result-symbol">{item.symbol}</span>
+                                <span className="text-muted navbar-search-result-name">{item.name}</span>
+                              </span>
+                              <span className="navbar-search-result-price">
+                                <span className="font-monospace">
+                                  {price > 0
+                                    ? price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                    : '—'}
+                                </span>
+                                <span className={`font-monospace ms-2 ${changeClass}`}>
+                                  {changePrefix}{change.toFixed(2)}
+                                </span>
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                      <li className="navbar-search-result-footer">
+                        {results.length > 8
+                          ? `顯示前 8 筆，共 ${results.length} 筆符合`
+                          : `共 ${results.length} 筆符合`}
                       </li>
-                    ))
+                    </>
                   )}
                 </ul>
               )}

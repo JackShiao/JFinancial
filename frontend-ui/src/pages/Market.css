@@ -7,6 +7,33 @@
   height: 380px;
 }
 
+/* Premium 付費牆 overlay */
+.market-premium-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.market-premium-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent 20%,
+    rgba(var(--bs-body-bg-rgb), 0.97) 58%
+  );
+}
+
+.market-premium-cta {
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  text-align: center;
+  z-index: 1;
+}
+
 @media (max-width: 991.98px) {
   .market-page .market-sidebar {
     position: static;

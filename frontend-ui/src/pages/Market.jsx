@@ -15,6 +15,7 @@ import { Line } from 'react-chartjs-2'
 import { fetchMarketHistory, fetchMarketIndices } from '../api/marketApi'
 import { addToWatchlistAPI, getWatchlistAPI, removeFromWatchlistAPI } from '../api/watchlistApi'
 import { useAuthStore } from '../store/authStore'
+import { useToastStore } from '../store/toastStore'
 import './Market.css'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
@@ -160,6 +161,7 @@ function Market() {
   const isPremium = useAuthStore((state) => state.isPremium)
   const [watchlist, setWatchlist] = useState(new Set())
   const [watchlistLoading, setWatchlistLoading] = useState(new Set())
+  const addToast = useToastStore((state) => state.addToast)
 
   const current = marketConfigs[activeKey]
   const hasSymbol = !!current.symbol
@@ -176,7 +178,9 @@ function Market() {
         })
         setLiveData(map)
       })
-      .catch(() => {})
+      .catch(() => {
+        addToast('無法取得即時市場資料，請稍後再試', 'warning')
+      })
       .finally(() => setLoadingPrices(false))
   }, [])
 
@@ -214,7 +218,9 @@ function Market() {
         const symbols = new Set((res?.data ?? []).map((item) => item.symbol))
         setWatchlist(symbols)
       })
-      .catch(() => {})
+      .catch(() => {
+        addToast('追蹤清單載入失敗，請稍後再試', 'warning')
+      })
   }, [isLoggedIn])
 
   async function toggleWatchlist(symbol) {
@@ -233,7 +239,13 @@ function Market() {
         setWatchlist((prev) => new Set(prev).add(symbol))
       }
     } catch {
-      // 靜默失敗
+      addToast('操作失敗，請稍後再試', 'danger')
+      setWatchlist((prev) => {
+        const next = new Set(prev)
+        if (watchlist.has(symbol)) next.add(symbol)
+        else next.delete(symbol)
+        return next
+      })
     } finally {
       setWatchlistLoading((prev) => {
         const next = new Set(prev)
@@ -391,33 +403,36 @@ function Market() {
           </div>
 
           <h2 className="h4 mb-3">{current.title}</h2>
-          <div className="market-chart-wrap mb-4">
-            {loadingChart ? (
-              <div className="d-flex justify-content-center align-items-center h-100 text-muted">
-                <div className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                載入中…
+          <div className="position-relative mb-4">
+            <div className="market-chart-wrap">
+              {loadingChart ? (
+                <div className="d-flex justify-content-center align-items-center h-100 text-muted">
+                  <div className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                  載入中…
+                </div>
+              ) : chartData.labels.length === 0 ? (
+                <div className="d-flex justify-content-center align-items-center h-100 text-muted">
+                  <i className="bi bi-bar-chart me-2" />暫無歷史數據
+                </div>
+              ) : (
+                <Line data={lineData} options={lineOptions} />
+              )}
+            </div>
+
+            {/* Premium 付費牆 overlay */}
+            {!isPremium && !loadingChart && chartData.labels.length > 0 && hasSymbol && (
+              <div className="market-premium-overlay" aria-hidden="true">
+                <div className="market-premium-fade" />
+                <div className="market-premium-cta">
+                  <i className="bi bi-lock-fill fs-2 mb-2 d-block text-secondary" />
+                  <p className="mb-3 small fw-semibold">升級 Premium 查看完整 365 天走勢</p>
+                  <Link to="/subscription" className="btn btn-primary btn-sm">
+                    <i className="bi bi-stars me-1" />立即升級
+                  </Link>
+                </div>
               </div>
-            ) : chartData.labels.length === 0 ? (
-              <div className="d-flex justify-content-center align-items-center h-100 text-muted">
-                <i className="bi bi-bar-chart me-2" />暫無歷史數據
-              </div>
-            ) : (
-              <Line data={lineData} options={lineOptions} />
             )}
           </div>
-
-          {/* Premium 升級提示 */}
-          {!isPremium && (
-            <div className="alert alert-info d-flex align-items-center justify-content-between mb-4 py-2">
-              <span>
-                <i className="bi bi-stars me-2" />
-                免費版僅顯示 30 筆歷史資料。升級 <strong>Premium</strong> 可查看完整 365 筆走勢。
-              </span>
-              <Link to="/subscription" className="btn btn-sm btn-primary ms-3 text-nowrap">
-                升級 Premium
-              </Link>
-            </div>
-          )}
 
           {current.type === 'stock' && (() => {
             if (!current.symbol) {

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { fetchMarketIndices } from '../../api/marketApi'
 import { getWatchlistAPI, addToWatchlistAPI, removeFromWatchlistAPI } from '../../api/watchlistApi'
 import { useAuthStore } from '../../store/authStore'
+import { useToastStore } from '../../store/toastStore'
 import { Link, useNavigate } from 'react-router-dom'
 import './MarketSection.css'
 
@@ -69,6 +70,7 @@ function MarketSection() {
   const [watchlist, setWatchlist] = useState(new Set())
   const [watchlistLoading, setWatchlistLoading] = useState(new Set())
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+  const addToast = useToastStore((state) => state.addToast)
 
   const loadData = useCallback(async () => {
     try {
@@ -119,7 +121,13 @@ function MarketSection() {
         setWatchlist((prev) => new Set(prev).add(symbol))
       }
     } catch {
-      // 靜默失敗
+      addToast('操作失敗，請稍後再試', 'danger')
+      setWatchlist((prev) => {
+        const next = new Set(prev)
+        if (watchlist.has(symbol)) next.add(symbol)
+        else next.delete(symbol)
+        return next
+      })
     } finally {
       setWatchlistLoading((prev) => {
         const next = new Set(prev)

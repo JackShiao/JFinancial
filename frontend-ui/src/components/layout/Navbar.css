@@ -25,6 +25,54 @@ header {
   letter-spacing: 0.08em;
 }
 
+/* 搜尋結果項目：左右兩側排版 */
+.navbar-search-dropdown {
+  min-width: 320px;
+}
+
+.navbar-search-result-item {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-search-result-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.navbar-search-result-symbol {
+  flex-shrink: 0;
+}
+
+.navbar-search-result-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.navbar-search-result-price {
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+/* 搜尋結果底部筆數提示 */
+.navbar-search-result-footer {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  color: #6c757d;
+  border-top: 1px solid #e9ecef;
+  text-align: right;
+}
+
 .navbar-search-placeholder {
   display: inline-flex;
   align-items: center;
