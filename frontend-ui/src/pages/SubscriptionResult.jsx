@@ -12,18 +12,13 @@ import { useAuthStore } from '../store/authStore'
 export default function SubscriptionResult() {
   const [searchParams] = useSearchParams()
   const [status, setStatus] = useState(null)
-  const [loading, setLoading] = useState(true)
-
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const setIsPremium = useAuthStore((s) => s.setIsPremium)
-  const rtnCode = searchParams.get('RtnCode')  // ECPay: "1" = 成功
+  const [loading, setLoading] = useState(isLoggedIn)
   const rtnMsg = searchParams.get('RtnMsg')
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      setLoading(false)
-      return
-    }
+    if (!isLoggedIn) return
     getSubscriptionStatus()
       .then((res) => {
         setStatus(res.data)
@@ -33,12 +28,21 @@ export default function SubscriptionResult() {
       .finally(() => setLoading(false))
   }, [isLoggedIn, setIsPremium])
 
-  const isPaid = rtnCode === '1' || status?.active
+  const isPaid = status?.active
 
   return (
     <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
       {loading ? (
         <div className="spinner-border text-primary" role="status" />
+      ) : !isLoggedIn ? (
+        <>
+          <div className="display-1 mb-3">🔒</div>
+          <h2 className="fw-bold">請先登入</h2>
+          <p className="text-muted mt-2">請登入後才能確認您的訂閱狀態。</p>
+          <Link to="/" className="btn btn-outline-primary mt-3">
+            回首頁
+          </Link>
+        </>
       ) : isPaid ? (
         <>
           <div className="display-1 mb-3">🎉</div>

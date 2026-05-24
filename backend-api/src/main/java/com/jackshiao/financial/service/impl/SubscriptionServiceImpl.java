@@ -1,5 +1,6 @@
 package com.jackshiao.financial.service.impl;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -36,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final SubscriptionPlanRepository planRepository;
     private final MemberSubscriptionRepository subscriptionRepository;
@@ -83,8 +86,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalStateException("找不到會員: " + memberId));
 
-        // 產生唯一 MerchantTradeNo：JF{yyyyMMddHHmmss}{memberId}，最長 20 字元
-        String tradeNo = generateTradeNo(memberId);
+        // 產生唯一 MerchantTradeNo
+        String tradeNo = generateTradeNo();
 
         // 建立 PENDING 付款訂單
         PaymentOrder order = PaymentOrder.builder()
@@ -123,19 +126,43 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             // 2. 確認付款結果
             String rtnCode = params.get("RtnCode");
+            String tradeNo = params.get("MerchantTradeNo");
             if (!"1".equals(rtnCode)) {
                 log.info("[ECPay Notify] 付款未成功. RtnCode={}, RtnMsg={}", rtnCode, params.get("RtnMsg"));
+                paymentOrderRepository.findByMerchantTradeNo(tradeNo).ifPresent(failedOrder -> {
+                    if (failedOrder.getStatus() == PaymentStatus.PENDING) {
+                        failedOrder.setStatus(PaymentStatus.FAILED);
+                        paymentOrderRepository.save(failedOrder);
+                    }
+                });
                 return "0|Payment Not Success";
             }
 
-            // 3. 找到對應的訂單
-            String tradeNo = params.get("MerchantTradeNo");
-            PaymentOrder order = paymentOrderRepository.findByMerchantTradeNo(tradeNo)
+            // 3. 找到對應的訂單（加 PESSIMISTIC_WRITE 鎖，防止並發重複入帳）
+            PaymentOrder order = paymentOrderRepository.findByMerchantTradeNoForUpdate(tradeNo)
                     .orElseThrow(() -> new IllegalStateException("找不到訂單: " + tradeNo));
 
             if (order.getStatus() == PaymentStatus.PAID) {
                 // 重複通知，忽略
                 return "1|OK";
+            }
+
+            // 3.5 核對 MerchantID 與金額，防止資料不一致或惡意偽造
+            String notifyMerchantId = params.get("MerchantID");
+            if (!merchantId.equals(notifyMerchantId)) {
+                log.warn("[ECPay Notify] MerchantID 不符. expected={}, received={}", merchantId, notifyMerchantId);
+                return "0|MerchantID Mismatch";
+            }
+            try {
+                int notifyAmt = Integer.parseInt(params.get("TradeAmt"));
+                if (notifyAmt != order.getAmount()) {
+                    log.warn("[ECPay Notify] 金額不符. tradeNo={}, expected={}, received={}",
+                            tradeNo, order.getAmount(), notifyAmt);
+                    return "0|Amount Mismatch";
+                }
+            } catch (NumberFormatException e) {
+                log.warn("[ECPay Notify] TradeAmt 格式錯誤: {}", params.get("TradeAmt"));
+                return "0|Amount Format Error";
             }
 
             // 4. 更新訂單狀態
@@ -176,11 +203,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     // 私有輔助方法
     // ─────────────────────────────────────────────
 
-    private String generateTradeNo(Integer memberId) {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String tradeNo = "JF" + timestamp + memberId;
-        // 確保不超過 20 字元（ECPay 限制）
-        return tradeNo.length() > 20 ? tradeNo.substring(0, 20) : tradeNo;
+    /**
+     * 產生符合 ECPay 限制（≤ 20 字元）且保證唯一的 MerchantTradeNo。
+     * 格式：JF + 毫秒時間戳後 10 碼 + 8 碼隨機 hex = 共 20 碼。
+     * 以毫秒精度大幅降低碰撞機率，SecureRandom 後綴處理同毫秒並發。
+     */
+    private String generateTradeNo() {
+        String ms = String.format("%013d", System.currentTimeMillis()).substring(3); // 後 10 碼
+        String rand = String.format("%08X", SECURE_RANDOM.nextInt(Integer.MAX_VALUE)); // 8 碼 hex
+        return "JF" + ms + rand; // 2 + 10 + 8 = 20 碼
     }
 
     private Map<String, String> buildEcpayParams(String tradeNo, SubscriptionPlan plan) {
@@ -207,9 +238,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         StringBuilder sb = new StringBuilder();
         sb.append("<form id='ecpay-form' method='POST' action='").append(checkoutUrl).append("'>");
         params.forEach((k, v) -> sb.append("<input type='hidden' name='").append(k)
-                .append("' value='").append(v.replace("'", "&#39;")).append("'/>"));
+                .append("' value='").append(escapeHtmlAttr(v)).append("'/>"));
         sb.append("</form>");
         return sb.toString();
+    }
+
+    /**
+     * 對 HTML attribute value 做完整跳脫，防止特殊字元破壞 HTML 結構或造成注入。
+     * & 必須最先替換，避免後續替換產生的 & 再次被編碼。
+     */
+    private static String escapeHtmlAttr(String value) {
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     /**
@@ -224,9 +268,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .findTopByMemberIdAndStatusOrderByExpireAtDesc(member.getId(), SubscriptionStatus.ACTIVE)
                 .ifPresentOrElse(
                     existing -> {
-                        LocalDateTime base = existing.getExpireAt().isAfter(now)
-                                ? existing.getExpireAt() : now;
+                        boolean stillActive = existing.getExpireAt().isAfter(now);
+                        LocalDateTime base = stillActive ? existing.getExpireAt() : now;
+                        existing.setPlan(plan);                       // 同步更新為本次購買的方案
                         existing.setExpireAt(base.plusDays(plan.getDurationDays()));
+                        if (!stillActive) {
+                            existing.setStartAt(now);                 // 已過期：重置起算時間
+                        }
                         subscriptionRepository.save(existing);
                     },
                     () -> {

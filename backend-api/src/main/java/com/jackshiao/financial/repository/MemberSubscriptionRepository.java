@@ -1,5 +1,6 @@
 package com.jackshiao.financial.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,10 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
      * 查詢特定會員最新的一筆訂閱（不限狀態）
      */
     Optional<MemberSubscription> findTopByMemberIdOrderByExpireAtDesc(Integer memberId);
+
+    /**
+     * 判斷指定 email 的會員是否有尚未到期的 ACTIVE 訂閱
+     */
+    boolean existsByMemberEmailAndStatusAndExpireAtAfter(
+            String email, SubscriptionStatus status, LocalDateTime now);
 }

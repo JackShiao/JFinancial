@@ -29,14 +29,16 @@ export const useAuthStore = create((set) => ({
     });
   },
 
-  logout: () => {
+  logout: (silent = false) => {
     localStorage.removeItem(TOKEN_KEY);
     set({
       isLoggedIn: false,
       userInfo: null,
       isPremium: false,
     });
-    useToastStore.getState().addToast('已成功登出', 'info', 3000);
+    if (!silent) {
+      useToastStore.getState().addToast('已成功登出', 'info', 3000);
+    }
   },
 
   // 修改顯示名稱後同步更新 store，讓 Navbar 即時反映新名稱

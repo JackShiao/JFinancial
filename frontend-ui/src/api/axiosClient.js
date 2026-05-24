@@ -49,7 +49,7 @@ axiosClient.interceptors.response.use(
     const isAuthEndpoint = AUTH_PATHS.some((p) => requestUrl.includes(p))
 
     if (status === 401 && !isAuthEndpoint) {
-      useAuthStore.getState().logout()
+      useAuthStore.getState().logout(true)
       useToastStore.getState().addToast('登入已過期，請重新登入', 'warning')
     }
 

@@ -22,9 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * ECPay 付款回呼 Controller
  *
- * <p>此端點專用於接收 ECPay 的付款結果通知，在 SecurityConfig 中設為 permitAll（不需 JWT）。
- * - /ecpay/return  : ReturnURL，使用者瀏覽器被 ECPay POST 回來，後端 redirect 到前端 SPA
- * - /ecpay/notify  : NotifyURL，ECPay Server-to-Server 通知，回應純文字 "1|OK"
+ * 兩個端點均透過 {@code WebSecurityCustomizer#web.ignoring()} 完全繞過 Spring Security
+ * FilterChain（非 permitAll），不經過 CORS、CSRF、JwtAuthFilter。
+ *
+ * /ecpay/return  : ReturnURL，使用者瀏覽器被 ECPay POST 回來，後端 302 redirect 到前端 SPA。
+ *       【注意】此端點未驗簽，任何人均可直接呼叫；請勿在此執行任何訂單狀態變更。
+ * /ecpay/notify  : NotifyURL，ECPay Server-to-Server 通知，已實作 CheckMacValue 驗簽，
+ *       驗簽通過後才執行訂單狀態更新，回應純文字 "1|OK"。
  */
 @Slf4j
 @RestController
@@ -51,7 +55,9 @@ public class PaymentCallbackController {
         URI redirectUri = UriComponentsBuilder.fromUriString(frontendResultUrl)
                 .queryParam("RtnCode", rtnCode)
                 .queryParam("RtnMsg", rtnMsg)
-                .build().toUri();
+                .encode()
+                .build()
+                .toUri();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(redirectUri);

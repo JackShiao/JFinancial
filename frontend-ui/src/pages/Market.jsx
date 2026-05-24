@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Line } from 'react-chartjs-2'
 import { fetchMarketHistory, fetchMarketIndices } from '../api/marketApi'
 import { addToWatchlistAPI, getWatchlistAPI, removeFromWatchlistAPI } from '../api/watchlistApi'
@@ -413,9 +413,9 @@ function Market() {
                 <i className="bi bi-stars me-2" />
                 免費版僅顯示 30 筆歷史資料。升級 <strong>Premium</strong> 可查看完整 365 筆走勢。
               </span>
-              <a href="/subscription" className="btn btn-sm btn-primary ms-3 text-nowrap">
+              <Link to="/subscription" className="btn btn-sm btn-primary ms-3 text-nowrap">
                 升級 Premium
-              </a>
+              </Link>
             </div>
           )}
 

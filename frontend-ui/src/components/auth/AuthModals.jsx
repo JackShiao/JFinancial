@@ -37,6 +37,7 @@ function AuthModals() {
   const [registerLoading, setRegisterLoading] = useState(false)
   const [registerCountdown, setRegisterCountdown] = useState(0)
   const countdownRef = useRef(null)
+  const redirectTimerRef = useRef(null)
 
   const loginPasswordType = useMemo(
     () => (showLoginPassword ? 'text' : 'password'),
@@ -63,6 +64,10 @@ function AuthModals() {
     if (countdownRef.current) {
       clearInterval(countdownRef.current)
       countdownRef.current = null
+    }
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current)
+      redirectTimerRef.current = null
     }
   }
 
@@ -94,7 +99,7 @@ function AuthModals() {
       resetLoginForm()
       addToast(`歡迎回來，${result.data.displayName ?? result.data.email}！`, 'success', 3000)
     } catch (err) {
-      addToast(err?.response?.data?.message ?? '登入失敗，請確認帳號密碼後再試。', 'danger', 4000)
+      addToast(err?.message ?? '登入失敗，請確認帳號密碼後再試。', 'danger', 4000)
     } finally {
       setLoginLoading(false)
     }
@@ -155,12 +160,13 @@ function AuthModals() {
         })
       }, 1000)
 
-      setTimeout(() => {
+      redirectTimerRef.current = setTimeout(() => {
+        redirectTimerRef.current = null
         resetRegisterForm()
         openModal('login')
       }, REGISTER_REDIRECT_DELAY_MS)
     } catch (err) {
-      addToast(err?.response?.data?.message ?? '註冊失敗，請稍後再試。', 'danger', 4000)
+      addToast(err?.message ?? '註冊失敗，請稍後再試。', 'danger', 4000)
     } finally {
       setRegisterLoading(false)
     }

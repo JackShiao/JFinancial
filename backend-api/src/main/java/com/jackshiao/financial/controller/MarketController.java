@@ -5,8 +5,7 @@ import com.jackshiao.financial.dto.MarketPriceHistoryDto;
 import com.jackshiao.financial.entity.MarketIndex;
 import com.jackshiao.financial.service.MarketService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,27 +41,20 @@ public class MarketController {
 
     /**
      * 取得市場歷史資料。
-     * Premium 用戶最多可取得 365 筆；免費用戶上限為 30 筆（忽略前端傳入的 limit）。
+     * Premium 用戶（訂閱 ACTIVE 且未到期）最多可取得 365 筆；免費用戶上限為 30 筆。
+     * 以 DB 訂閱狀態為準，付款後立即生效，到期後立即失效。
      */
     @GetMapping("/history")
     public ApiResponse<List<MarketPriceHistoryDto>> getMarketHistory(
+            @AuthenticationPrincipal String email,
             @RequestParam(name = "symbol") String symbol,
             @RequestParam(name = "limit", defaultValue = "30") int limit) {
 
-        int effectiveLimit = isPremiumUser() ? Math.min(limit, PREMIUM_HISTORY_LIMIT)
-                                             : FREE_HISTORY_LIMIT;
+        int effectiveLimit = marketService.isActivePremium(email)
+                ? Math.min(limit, PREMIUM_HISTORY_LIMIT)
+                : FREE_HISTORY_LIMIT;
         List<MarketPriceHistoryDto> history = marketService.getMarketHistory(symbol, effectiveLimit);
         return ApiResponse.success(history);
-    }
-
-    /** 從 SecurityContext 判斷當前請求者是否擁有 ROLE_PREMIUM */
-    private boolean isPremiumUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return false;
-        }
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_PREMIUM".equals(a.getAuthority()));
     }
 }
 

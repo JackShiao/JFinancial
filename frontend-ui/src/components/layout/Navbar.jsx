@@ -206,7 +206,7 @@ function Navbar() {
                     </li>
                     <li><hr className="dropdown-divider" /></li>
                     <li>
-                      <button type="button" className="dropdown-item text-danger" onClick={logout}>
+                      <button type="button" className="dropdown-item text-danger" onClick={() => logout()}>
                         <i className="bi bi-box-arrow-right me-2" aria-hidden="true" />
                         登出
                       </button>
