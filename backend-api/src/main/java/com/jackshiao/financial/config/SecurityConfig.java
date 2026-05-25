@@ -57,6 +57,11 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.deny())  // 防止 Clickjacking
+                .contentTypeOptions(cto -> {})        // X-Content-Type-Options: nosniff
+                .xssProtection(xss -> {})             // X-XSS-Protection: 1; mode=block
+            )
             .authorizeHttpRequests(auth -> auth
                 // 公開端點：認證、市場指數（唯讀）、訂閱方案列表
                 .requestMatchers("/api/auth/**").permitAll()

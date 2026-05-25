@@ -43,7 +43,7 @@ function Navbar() {
   }, [])
 
   function handleQueryChange(e) {
-    const val = e.target.value
+    const val = e.target.value.slice(0, 50) // 限制最長 50 字，防止超長查詢
     setQuery(val)
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => runSearch(val), SEARCH_DEBOUNCE_MS)

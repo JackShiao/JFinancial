@@ -2,6 +2,7 @@ package com.jackshiao.financial.service;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,6 +24,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final Pattern PASSWORD_RULE = Pattern.compile(
+            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]).{8,}$"
+    );
+
     private final MemberRepository memberRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -32,6 +37,10 @@ public class AuthService {
     public void register(RegisterRequest request) {
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("註冊失敗，請稍後再試");
+        }
+
+        if (!PASSWORD_RULE.matcher(request.getPassword()).matches()) {
+            throw new IllegalArgumentException("密碼需至少 8 碼，並包含大寫字母、小寫字母、數字及特殊符號");
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());

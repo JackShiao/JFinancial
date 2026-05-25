@@ -13,13 +13,25 @@ function stripHtml(html) {
 }
 
 // 解析 RSS description 中的 <a> 連結，回傳 [{text, href}] 陣列
+// 只保留 http/https 連結，防止 javascript: 協定 XSS
 function parseDescriptionLinks(html) {
   if (!html) return []
   try {
     const doc = new DOMParser().parseFromString(html, 'text/html')
     return Array.from(doc.querySelectorAll('a[href]'))
-      .map((a) => ({ text: a.textContent.trim(), href: a.getAttribute('href') }))
-      // 過濾太短的導覽連結（「新聞」「政治」等分類標籤，通常 < 10 字）
+      .map((a) => {
+        const raw = a.getAttribute('href') || ''
+        let safeHref = null
+        try {
+          const url = new URL(raw)
+          if (url.protocol === 'http:' || url.protocol === 'https:') {
+            safeHref = raw
+          }
+        } catch {
+          // 無效或相對 URL，直接丟棄
+        }
+        return { text: a.textContent.trim(), href: safeHref }
+      })
       .filter((item) => item.text.length >= 10 && item.href)
   } catch {
     return []

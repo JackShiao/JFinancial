@@ -235,7 +235,7 @@ function AuthModals() {
                       )}
                     </div>
 
-                    <div className="form-floating mb-3">
+                    <div className="form-floating mb-1">
                       <input
                         type={loginPasswordType}
                         className={`form-control rounded-3 ${loginErrors.password ? 'is-invalid' : ''}`}
@@ -250,19 +250,18 @@ function AuthModals() {
                       {loginErrors.password && (
                         <div className="invalid-feedback">{loginErrors.password}</div>
                       )}
-
-                      <div className="form-check mt-2">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="showLoginPassword"
-                          checked={showLoginPassword}
-                          onChange={(event) => setShowLoginPassword(event.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="showLoginPassword">
-                          顯示密碼
-                        </label>
-                      </div>
+                    </div>
+                    <div className="form-check mb-3 text-start">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="showLoginPassword"
+                        checked={showLoginPassword}
+                        onChange={(event) => setShowLoginPassword(event.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="showLoginPassword">
+                        顯示密碼
+                      </label>
                     </div>
 
                     <button
@@ -413,18 +412,18 @@ function AuthModals() {
                         <div className="invalid-feedback">{registerErrors.confirmPassword}</div>
                       )}
 
-                      <div className="form-check mt-2">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="showRegisterPassword"
-                          checked={showRegisterPassword}
-                          onChange={(event) => setShowRegisterPassword(event.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="showRegisterPassword">
-                          顯示密碼
-                        </label>
-                      </div>
+                    </div>
+                    <div className="form-check mb-3 text-start">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="showRegisterPassword"
+                        checked={showRegisterPassword}
+                        onChange={(event) => setShowRegisterPassword(event.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="showRegisterPassword">
+                        顯示密碼
+                      </label>
                     </div>
 
                     <button
