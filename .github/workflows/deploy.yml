@@ -1,0 +1,129 @@
+name: Deploy to GCP
+
+# 只有 main 分支的 push 才觸發部署
+# （CICD 分支學完後 squash merge 回 main 就會自動觸發）
+on:
+  push:
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-east1
+  # Artifact Registry 完整路徑
+  REGISTRY: asia-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/jfinancial-repo
+
+# =====================================================
+# Job 1：後端 — Build image + Deploy to Cloud Run
+# =====================================================
+jobs:
+  deploy-backend:
+    name: Build & Deploy Backend
+    runs-on: ubuntu-latest
+
+    # 將 Cloud Run URL 傳給下一個 Job
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 用 Service Account 金鑰向 GCP 驗證
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 讓 Docker 可以推送到 Artifact Registry
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # Multi-stage build，tag 用 commit SHA 確保唯一性
+      - name: Build & Push backend image
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/backend:${{ github.sha }} \
+            ./backend-api
+          docker push ${{ env.REGISTRY }}/backend:${{ github.sha }}
+
+      # 部署到 Cloud Run，並取回服務 URL
+      - name: Deploy backend to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: jfinancial-backend
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/backend:${{ github.sha }}
+          # 掛載 Cloud SQL Auth Proxy（讓 Spring Boot 可透過 Unix Socket 連線）
+          add_cloudsql_instances: ${{ env.PROJECT_ID }}:${{ env.REGION }}:jfinancial-db
+          env_vars: |
+            SPRING_PROFILES_ACTIVE=prod
+            SPRING_DATASOURCE_USERNAME=root
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            FRED_API_KEY=${{ secrets.FRED_API_KEY }}
+            FUGLE_API_KEY=${{ secrets.FUGLE_API_KEY }}
+            CORS_ALLOWED_ORIGINS=*
+          # Cloud Run 服務設定
+          flags: |
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=3
+            --memory=512Mi
+            --cpu=1
+
+      - name: Show backend URL
+        run: echo "Backend deployed to ${{ steps.deploy.outputs.url }}"
+
+# =====================================================
+# Job 2：前端 — Build image + Deploy to Cloud Run
+# 等後端部署完才執行（需要後端 URL 作為 nginx proxy 目標）
+# =====================================================
+  deploy-frontend:
+    name: Build & Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: deploy-backend  # 依賴後端部署完成
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build & Push frontend image
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} \
+            ./frontend-ui
+          docker push ${{ env.REGISTRY }}/frontend:${{ github.sha }}
+
+      - name: Deploy frontend to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: jfinancial-frontend
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/frontend:${{ github.sha }}
+          env_vars: |
+            NGINX_BACKEND_URL=${{ needs.deploy-backend.outputs.url }}
+          flags: |
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=2
+            --memory=256Mi
+            --cpu=1
+
+      - name: Show frontend URL
+        run: echo "Frontend deployed to ${{ steps.deploy.outputs.url }}"

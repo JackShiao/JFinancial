@@ -24,8 +24,14 @@ RUN npm run build
 # =====================================================
 FROM nginx:1.27-alpine
 
-# 複製自訂 Nginx 設定（含 API proxy 與 React Router fallback）
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# 預設後端 URL（本機 Docker Compose 使用）
+# Cloud Run 部署時由環境變數 NGINX_BACKEND_URL 覆蓋
+ENV NGINX_BACKEND_URL=http://backend:8080
+
+# nginx:alpine 的 entrypoint 會對 /etc/nginx/templates/*.conf.template
+# 執行 envsubst，將 ${NGINX_BACKEND_URL} 替換為實際值，
+# 並輸出到 /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # 從 build stage 複製打包好的靜態資源
 COPY --from=build /app/dist /usr/share/nginx/html
