@@ -4,12 +4,15 @@ import com.jackshiao.financial.common.ResourceNotFoundException;
 import com.jackshiao.financial.dto.ChangePasswordRequest;
 import com.jackshiao.financial.dto.UpdateDisplayNameRequest;
 import com.jackshiao.financial.entity.Member;
+import com.jackshiao.financial.entity.enums.SubscriptionStatus;
 import com.jackshiao.financial.repository.MemberRepository;
+import com.jackshiao.financial.repository.MemberSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +24,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final MemberSubscriptionRepository memberSubscriptionRepository;
 
     @Transactional
     public Map<String, String> updateDisplayName(String email, UpdateDisplayNameRequest request) {
@@ -57,5 +61,17 @@ public class MemberService {
 
         member.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         memberRepository.save(member);
+    }
+
+    public String getDisplayName(String email) {
+        return memberRepository.findByEmail(email)
+                .map(Member::getDisplayName)
+                .orElse(email);
+    }
+
+    public boolean isActivePremium(String email) {
+        if (email == null) return false;
+        return memberSubscriptionRepository.existsByMemberEmailAndStatusAndExpireAtAfter(
+                email, SubscriptionStatus.ACTIVE, LocalDateTime.now());
     }
 }

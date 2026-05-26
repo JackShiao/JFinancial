@@ -17,6 +17,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.jackshiao.financial.oauth2.OAuth2SuccessHandler;
+import com.jackshiao.financial.service.CustomOAuth2UserService;
+import com.jackshiao.financial.service.CustomOidcUserService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -28,6 +31,9 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOidcUserService customOidcUserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -63,10 +69,12 @@ public class SecurityConfig {
                 .xssProtection(xss -> {})             // X-XSS-Protection: 1; mode=block
             )
             .authorizeHttpRequests(auth -> auth
-                // 公開端點：認證、市場指數（唯讀）、訂閱方案列表
-                .requestMatchers("/api/auth/**").permitAll()
+                // 公開端點：認證（登入/註冊/登出）、市場指數（唯讀）、訂閱方案列表
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/market/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/subscription/plans").permitAll()
+                // /api/auth/me 需要有效 JWT（Cookie 或 Header），未登入回 401
+                .requestMatchers("/api/auth/me").authenticated()
                 // 受保護端點：追蹤清單、會員資料、投資組合、訂閱需登入
                 .requestMatchers("/api/watchlist/**").authenticated()
                 .requestMatchers("/api/member/**").authenticated()
@@ -75,7 +83,12 @@ public class SecurityConfig {
                 // 其他端點預設需要認證
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)        // GitHub (OAuth2)
+                    .oidcUserService(customOidcUserService))    // Google (OIDC)
+                .successHandler(oAuth2SuccessHandler));
 
         return http.build();
     }

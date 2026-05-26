@@ -9,6 +9,8 @@ const axiosClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // 允許跨域請求時攜帶 Cookie（OAuth2 HttpOnly Cookie 需要此設定）
+  withCredentials: true,
 })
 
 axiosClient.interceptors.request.use(

@@ -36,7 +36,7 @@ public class Member {
     @Column(name = "email", nullable = false, length = 100, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 100)
+    @Column(name = "password_hash", nullable = true, length = 100)
     private String passwordHash;
 
     @Column(name = "display_name", nullable = false, length = 50)
@@ -44,6 +44,12 @@ public class Member {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "oauth_provider", nullable = true, length = 20)
+    private String oauthProvider;
+
+    @Column(name = "oauth_id", nullable = true, length = 100)
+    private String oauthId;
 
     @Builder.Default
     @EqualsAndHashCode.Exclude

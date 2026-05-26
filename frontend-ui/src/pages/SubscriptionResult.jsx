@@ -19,6 +19,8 @@ export default function SubscriptionResult() {
   const [hasError, setHasError] = useState(false)
   const [countdown, setCountdown] = useState(5) // 初始值即為 5，effect 只負責遞減
   const rtnMsg = searchParams.get('RtnMsg')
+  // ECPay 失敗時偶爾回傳 "Succeeded" 等無意義英文訊息，過濾後才顯示
+  const displayRtnMsg = rtnMsg && !/^succeeded$/i.test(rtnMsg.trim()) ? rtnMsg : null
 
   useEffect(() => {
     if (!isLoggedIn) return
@@ -96,7 +98,10 @@ export default function SubscriptionResult() {
         <>
           <div className="display-1 mb-3">❌</div>
           <h2 className="fw-bold text-danger">付款未完成</h2>
-          <p className="text-muted mt-2">{rtnMsg || '交易取消或發生錯誤，請重新嘗試。'}</p>
+          <p className="text-muted mt-2">
+            {displayRtnMsg || '交易已取消或發生錯誤，請重新嘗試。'}
+          </p>
+          <p className="text-muted small">若金額已扣款，請聯絡客服處理。</p>
           <Link to="/subscription" className="btn btn-outline-primary mt-3">
             返回訂閱頁面
           </Link>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useToastStore } from './toastStore';
+import axiosClient from '../api/axiosClient';
 
 const TOKEN_KEY = 'access_token';
 
@@ -36,6 +37,8 @@ export const useAuthStore = create((set) => ({
       userInfo: null,
       isPremium: false,
     });
+    // 清除後端 HttpOnly Cookie（OAuth2 登入的使用者）；一般登入者無 Cookie 但呼叫無害
+    axiosClient.post('/auth/logout').catch(() => {});
     if (!silent) {
       useToastStore.getState().addToast('已成功登出', 'info', 3000);
     }
@@ -51,7 +54,17 @@ export const useAuthStore = create((set) => ({
   // 付款成功後同步 Premium 狀態（不需重新登入）
   setIsPremium: (value) => set({ isPremium: value }),
 
-  // 頁面重整後從 localStorage 恢復登入狀態
+  // OAuth2 Cookie 登入成功後，由 OAuthCallback 呼叫（token 不存 localStorage）
+  setOAuthAuth: ({ email, displayName, isPremium }) => {
+    set({
+      isLoggedIn: true,
+      userInfo: { email, displayName },
+      isPremium: !!isPremium,
+    });
+  },
+
+  // 頁面重整後從 localStorage 恢復登入狀態（一般帳密登入）
+  // OAuth2 Cookie 使用者的狀態由 App.jsx 呼叫 checkOAuthSession() 恢復
   initAuth: () => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;

@@ -70,28 +70,36 @@ const marketConfigs = {
     tableKey: 'n225',
     symbol: 'N225',
   },
-  twb20: {
-    title: '台灣-20年期公債殖利率',
-    chartLabel: '20年期殖利率',
-    color: '#0d6efd',
+  usb2: {
+    title: '美國-2年期公債殖利率',
+    chartLabel: 'US 2-Year',
+    color: '#0dcaf0',
     type: 'bond',
-    tableKey: 'twb',
-    symbol: null, // 台灣公債殖利率尚無免費公開 API，無 DB 記錄，不支援追蹤
+    tableKey: 'usb2',
+    symbol: 'US2Y',
   },
   usb10: {
     title: '美國-10年期公債殖利率',
-    chartLabel: '10年期殖利率',
+    chartLabel: 'US 10-Year',
     color: '#dc3545',
     type: 'bond',
-    tableKey: 'usb',
+    tableKey: 'usb10',
     symbol: 'US10Y',
+  },
+  usb20: {
+    title: '美國-20年期公債殖利率',
+    chartLabel: 'US 20-Year',
+    color: '#6610f2',
+    type: 'bond',
+    tableKey: 'usb20',
+    symbol: 'US20Y',
   },
   jpb10: {
     title: '日本-10年期公債殖利率',
-    chartLabel: '10年期殖利率',
+    chartLabel: 'JP 10-Year',
     color: '#ffc107',
     type: 'bond',
-    tableKey: 'jpb',
+    tableKey: 'jpb10',
     symbol: 'JP10Y',
   },
   usd_twd: {
@@ -334,8 +342,10 @@ function Market() {
             <h3 className="fs-6 text-muted">債券市場</h3>
             <div className="d-flex flex-column gap-1 mb-3">
               {[
-                { key: 'usb10', label: '美國公債' },
-                { key: 'jpb10', label: '日本公債' },
+                { key: 'usb2',  label: '美國公債-2年' },
+                { key: 'usb10', label: '美國公債-10年' },
+                { key: 'usb20', label: '美國公債-20年' },
+                { key: 'jpb10', label: '日本公債-10年' },
               ].map(({ key, label }) => (
                 <div key={key} className="d-flex align-items-center gap-1">
                   <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => setActiveKey(key)}>{label}</button>
@@ -558,7 +568,7 @@ function Market() {
                   {updatedAt && (
                     <p className="text-muted small mt-2 mb-0">
                       <i className="bi bi-clock me-1" aria-hidden="true" />
-                      資料更新時間：{updatedAt}（每 30 分鐘更新）
+                      資料更新時間：{updatedAt}（每 30 分鐘更新，來源：FRED API）
                     </p>
                   )}
                 </div>

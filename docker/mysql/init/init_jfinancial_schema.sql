@@ -29,11 +29,14 @@ CREATE TABLE role (
 CREATE TABLE member (
 	id INT NOT NULL AUTO_INCREMENT,
 	email VARCHAR(100) NOT NULL COMMENT '使用者的登入帳號',
-	password_hash VARCHAR(100) NOT NULL COMMENT '加密密碼存放區',
+	password_hash VARCHAR(100) NULL COMMENT '加密密碼存放區（OAuth 用戶為 NULL）',
 	display_name VARCHAR(50) NOT NULL COMMENT '暱稱',
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '創建帳號時間',
+	oauth_provider VARCHAR(20) NULL COMMENT '第三方登入來源，例如 google、github；本地帳號為 NULL',
+	oauth_id VARCHAR(100) NULL COMMENT '第三方登入的 Provider 唯一使用者 ID',
 	PRIMARY KEY (id),
-	UNIQUE KEY uk_member_email (email)
+	UNIQUE KEY uk_member_email (email),
+	UNIQUE KEY uk_member_oauth (oauth_provider, oauth_id)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_0900_ai_ci;
