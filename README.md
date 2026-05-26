@@ -165,9 +165,13 @@ J-Financial-Workspace/
 │   └── src/
 │       ├── api/          # Axios API 模組
 │       ├── assets/       # 靜態資源（圖片等）
-│       ├── components/   # 共用元件（Navbar、Footer、Toast 等）
+│       ├── components/   # 共用元件
+│       │   ├── auth/     # AuthModals（登入 / 註冊）、OAuthCallback
+│       │   ├── home/     # Banner、MarketOverview、NewsSection
+│       │   └── layout/   # Navbar、Footer、Toast
 │       ├── pages/        # 頁面元件
-│       └── store/        # Zustand 狀態管理
+│       ├── store/        # Zustand 狀態管理（authStore、toastStore）
+│       └── test/         # Vitest 單元測試（Navbar、Market）
 ├── docker/
 │   └── mysql/init/       # MySQL Schema 初始化 SQL
 ├── .ecpay-skill/         # ECPay API 技能文件（綠界金流整合參考）

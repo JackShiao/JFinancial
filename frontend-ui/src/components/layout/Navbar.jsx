@@ -23,6 +23,7 @@ function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const debounceRef = useRef(null)
   const wrapperRef = useRef(null)
+  const navRef = useRef(null)
 
   const runSearch = useCallback(async (keyword) => {
     if (!keyword.trim()) {
@@ -42,6 +43,13 @@ function Navbar() {
     }
   }, [])
 
+  const closeNavbar = useCallback(() => {
+    const el = document.getElementById('mainNavbar')
+    if (el?.classList.contains('show')) {
+      document.querySelector('[data-bs-target="#mainNavbar"]')?.click()
+    }
+  }, [])
+
   function handleQueryChange(e) {
     const val = e.target.value.slice(0, 50) // 限制最長 50 字，防止超長查詢
     setQuery(val)
@@ -52,22 +60,26 @@ function Navbar() {
   function handleSelectResult(item) {
     setQuery('')
     setDropdownOpen(false)
+    closeNavbar()
     navigate(`/market${item?.symbol ? `?symbol=${encodeURIComponent(item.symbol)}` : ''}`)
   }
 
-  // 點擊外部關閉 dropdown
+  // 點擊外部關閉搜尋 dropdown 及漢堡選單
   useEffect(() => {
     function onClickOutside(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
         setDropdownOpen(false)
       }
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        closeNavbar()
+      }
     }
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
+  }, [closeNavbar])
 
   return (
-    <header className="sticky-top">
+    <header className="sticky-top" ref={navRef}>
       <nav
         className="p-2 navbar navbar-expand-lg navbar-dark bg-dark"
         aria-label="主導覽列"
@@ -76,6 +88,7 @@ function Navbar() {
           <Link
             to="/"
             className="navbar-brand fs-5 mx-lg-0 me-lg-4 text-decoration-none text-white d-flex align-items-center gap-3"
+            onClick={closeNavbar}
           >
             <img
               className="brand-logo"
@@ -107,6 +120,7 @@ function Navbar() {
                   <NavLink
                     to={item.to}
                     end={item.end}
+                    onClick={closeNavbar}
                     className={({ isActive }) =>
                       `nav-link px-2 ${isActive ? 'text-secondary active' : 'text-white'}`
                     }
@@ -117,7 +131,7 @@ function Navbar() {
               ))}
             </ul>
 
-            <div className="navbar-search-wrapper position-relative me-2" ref={wrapperRef}>
+            <div className="navbar-search-wrapper position-relative me-lg-2 mb-2 mb-lg-0" ref={wrapperRef}>
               <div className="input-group input-group-sm">
                 <span className="input-group-text bg-secondary border-secondary text-white">
                   {searching
@@ -184,7 +198,7 @@ function Navbar() {
               )}
             </div>
 
-            <div className="d-flex flex-lg-row flex-column align-items-center gap-2">
+            <div className="navbar-action-group d-flex flex-lg-row flex-column align-items-lg-center align-items-stretch gap-2">
               {isLoggedIn ? (
                 <div className="dropdown">
                   <button
@@ -208,32 +222,32 @@ function Navbar() {
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end">
                     <li>
-                      <Link className="dropdown-item" to="/watchlist">
+                      <Link className="dropdown-item" to="/watchlist" onClick={closeNavbar}>
                         <i className="bi bi-star me-2" aria-hidden="true" />
                         追蹤清單
                       </Link>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/portfolio">
+                      <Link className="dropdown-item" to="/portfolio" onClick={closeNavbar}>
                         <i className="bi bi-briefcase me-2" aria-hidden="true" />
                         投資組合
                       </Link>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/subscription">
+                      <Link className="dropdown-item" to="/subscription" onClick={closeNavbar}>
                         <i className={`bi ${isPremium ? 'bi-star-fill text-warning' : 'bi-star'} me-2`} aria-hidden="true" />
                         {isPremium ? '訂閱管理' : '升級 Premium'}
                       </Link>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/profile">
+                      <Link className="dropdown-item" to="/profile" onClick={closeNavbar}>
                         <i className="bi bi-gear me-2" aria-hidden="true" />
                         個人設定
                       </Link>
                     </li>
                     <li><hr className="dropdown-divider" /></li>
                     <li>
-                      <button type="button" className="dropdown-item text-danger" onClick={() => logout()}>
+                      <button type="button" className="dropdown-item text-danger" onClick={() => { closeNavbar(); logout() }}>
                         <i className="bi bi-box-arrow-right me-2" aria-hidden="true" />
                         登出
                       </button>

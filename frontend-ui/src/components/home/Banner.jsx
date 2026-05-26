@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './Banner.css'
 
 const bannerSlides = [
@@ -31,7 +32,7 @@ const bannerSlides = [
     description: '深度解析產業趨勢，華爾街分析師看法！',
     buttonText: '探索更多',
     buttonClass: 'btn-success',
-    href: 'https://hao.cnyes.com/ch/361680',
+    href: 'https://hao.cnyes.com/wall/recommend',
     visualClass: 'banner-slide-3',
   },
 ]
@@ -88,14 +89,20 @@ function Banner() {
                   <h1 className="display-4 fw-bold mt-3 mb-3 text-white">{slide.title}</h1>
                   <p className="lead mb-4 text-white">{slide.description}</p>
                   <p>
-                    <a
-                      className={`btn btn-lg ${slide.buttonClass}`}
-                      href={slide.href}
-                      target={slide.href.startsWith('http') ? '_blank' : undefined}
-                      rel={slide.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    >
-                      {slide.buttonText}
-                    </a>
+                    {slide.href.startsWith('http') ? (
+                      <a
+                        className={`btn btn-lg ${slide.buttonClass}`}
+                        href={slide.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {slide.buttonText}
+                      </a>
+                    ) : (
+                      <Link className={`btn btn-lg ${slide.buttonClass}`} to={slide.href}>
+                        {slide.buttonText}
+                      </Link>
+                    )}
                   </p>
                 </div>
               </div>

@@ -38,4 +38,15 @@
   .market-page .market-sidebar {
     position: static;
   }
+
+  /* 功能選單收合動畫（max-height 滑動） */
+  .market-sidebar-body {
+    overflow: hidden;
+    max-height: 1500px;
+    transition: max-height 0.35s ease;
+  }
+
+  .market-sidebar-collapsed {
+    max-height: 0;
+  }
 }

@@ -1,8 +1,9 @@
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './AuthModals.css'
 import { useAuthStore } from '../../store/authStore'
 import { useToastStore } from '../../store/toastStore'
+import { loginAPI, registerAPI } from '../../api/authApi'
 
 /** Google / GitHub 第三方登入按鈕，登入和註冊 modal 共用 */
 function OAuthButtons() {
@@ -29,7 +30,6 @@ function OAuthButtons() {
     </>
   )
 }
-import { loginAPI, registerAPI } from '../../api/authApi'
 
 const passwordRule =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/
@@ -64,6 +64,16 @@ function AuthModals() {
   const [registerCountdown, setRegisterCountdown] = useState(0)
   const countdownRef = useRef(null)
   const redirectTimerRef = useRef(null)
+
+  // modal 開啟時鎖定背景捲動，關閉或卸載時還原原始值
+  useEffect(() => {
+    if (!isModalOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isModalOpen])
 
   const loginPasswordType = useMemo(
     () => (showLoginPassword ? 'text' : 'password'),

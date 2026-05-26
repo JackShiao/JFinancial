@@ -9,7 +9,7 @@ import {
   Title,
   Tooltip,
 } from 'chart.js'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Line } from 'react-chartjs-2'
 import { fetchMarketHistory, fetchMarketIndices } from '../api/marketApi'
@@ -169,6 +169,8 @@ function Market() {
   const isPremium = useAuthStore((state) => state.isPremium)
   const [watchlist, setWatchlist] = useState(new Set())
   const [watchlistLoading, setWatchlistLoading] = useState(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const sidebarRef = useRef(null)
   const addToast = useToastStore((state) => state.addToast)
 
   const current = marketConfigs[activeKey]
@@ -230,6 +232,23 @@ function Market() {
         addToast('追蹤清單載入失敗，請稍後再試', 'warning')
       })
   }, [isLoggedIn])
+
+  function handleSelectMarket(key) {
+    setActiveKey(key)
+    setSidebarOpen(false)
+  }
+
+  // 點擊側欄外部收合功能選單（只在 sidebar 開啟時掛 listener）
+  useEffect(() => {
+    if (!sidebarOpen) return
+    function onClickOutside(e) {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        setSidebarOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [sidebarOpen])
 
   async function toggleWatchlist(symbol) {
     if (!symbol) return
@@ -308,9 +327,23 @@ function Market() {
   return (
     <main className="market-page container py-3">
       <div className="row g-3">
-        <aside className="col-lg-3">
+        <aside className="col-lg-3" ref={sidebarRef}>
           <div className="market-sidebar border rounded bg-body-tertiary p-3">
-            <h2 className="fs-5 mb-3">功能選單</h2>
+            {/* 桌面版標題 */}
+            <h2 className="fs-5 mb-3 d-none d-lg-block">功能選單</h2>
+            {/* 手機版切換按鈕 */}
+            <button
+              type="button"
+              className="d-lg-none btn btn-outline-secondary w-100 mb-2 d-flex justify-content-between align-items-center"
+              onClick={() => setSidebarOpen((prev) => !prev)}
+              aria-expanded={sidebarOpen}
+              aria-controls="market-sidebar-body"
+            >
+              <span><i className="bi bi-list me-2" aria-hidden="true" />功能選單</span>
+              <i className={`bi bi-chevron-${sidebarOpen ? 'up' : 'down'}`} aria-hidden="true" />
+            </button>
+            {/* 可收合內容 */}
+            <div id="market-sidebar-body" className={`market-sidebar-body${sidebarOpen ? '' : ' market-sidebar-collapsed'}`}>
 
             <h3 className="fs-6 text-muted">全球股市</h3>
             <div className="d-flex flex-column gap-1 mb-3">
@@ -323,7 +356,7 @@ function Market() {
                 { key: 'n225', label: '日本市場' },
               ].map(({ key, label }) => (
                 <div key={key} className="d-flex align-items-center gap-1">
-                  <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => setActiveKey(key)}>{label}</button>
+                  <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => handleSelectMarket(key)}>{label}</button>
                   {isLoggedIn && marketConfigs[key].symbol && (
                     <button
                       type="button"
@@ -348,7 +381,7 @@ function Market() {
                 { key: 'jpb10', label: '日本公債-10年' },
               ].map(({ key, label }) => (
                 <div key={key} className="d-flex align-items-center gap-1">
-                  <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => setActiveKey(key)}>{label}</button>
+                  <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => handleSelectMarket(key)}>{label}</button>
                   {isLoggedIn && marketConfigs[key].symbol && (
                     <button
                       type="button"
@@ -372,7 +405,7 @@ function Market() {
                 { key: 'cny_twd', label: '人民幣/台幣' },
               ].map(({ key, label }) => (
                 <div key={key} className="d-flex align-items-center gap-1">
-                  <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => setActiveKey(key)}>{label}</button>
+                  <button type="button" className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => handleSelectMarket(key)}>{label}</button>
                   {isLoggedIn && marketConfigs[key].symbol && (
                     <button
                       type="button"
@@ -386,6 +419,7 @@ function Market() {
                   )}
                 </div>
               ))}
+            </div>
             </div>
           </div>
         </aside>

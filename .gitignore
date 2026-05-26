@@ -46,6 +46,7 @@ frontend-react/*.tsbuildinfo
 
 # GitHub 提示
 .github/instructions/
+git_tips.md
 
 # 其他
 keep.md

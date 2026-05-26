@@ -92,3 +92,49 @@ header {
     margin: 0 1rem 0 0;
   }
 }
+
+/* 搜尋欄 placeholder 半透明白色 */
+.navbar-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ========================================
+   RWD 手機版優化 (< 992px)
+   ======================================== */
+@media (max-width: 991.98px) {
+  /* 搜尋框：全寬 + 頂部分隔線 */
+  .navbar-search-wrapper {
+    width: 100%;
+    margin-right: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  /* 搜尋結果下拉：防止超出螢幕 */
+  .navbar-search-dropdown {
+    min-width: unset;
+    left: 0;
+    right: 0;
+  }
+
+  /* 按鈕區全寬 */
+  .navbar-action-group {
+    width: 100%;
+    padding-bottom: 0.5rem;
+  }
+
+  /* 會員 dropdown 按鈕與登入/註冊按鈕全寬 */
+  .navbar-action-group .dropdown,
+  .navbar-action-group .btn {
+    width: 100%;
+  }
+
+  /* 會員下拉選單：嵌入正常文件流，不浮動遮蓋頁面內容 */
+  .navbar-action-group .dropdown-menu {
+    position: static !important;
+    width: 100%;
+    margin-top: 0.25rem;
+    float: none;
+  }
+}
