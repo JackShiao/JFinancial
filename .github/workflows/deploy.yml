@@ -5,6 +5,9 @@ name: Deploy to GCP
 on:
   push:
     branches: [main]
+  # 手動觸發：可在任意分支從 GitHub Actions UI 執行
+  # 測試 CICD 分支時使用，合併後保留此觸發器也無妨
+  workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
