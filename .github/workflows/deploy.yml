@@ -9,7 +9,9 @@ on:
       - CICD   # 測試用：CICD 分支 push 也觸發，確認 CD 流程正確後移除
   workflow_dispatch:
 
+# 消除 Node.js 20 deprecation 警告
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-east1
   # Artifact Registry 完整路徑
@@ -22,6 +24,9 @@ jobs:
   deploy-backend:
     name: Build & Deploy Backend
     runs-on: ubuntu-latest
+    permissions:
+      contents: read   # actions/checkout 需要
+      id-token: write  # google-github-actions/auth 需要
 
     # 將 Cloud Run URL 傳給下一個 Job
     outputs:
@@ -47,9 +52,7 @@ jobs:
       # Multi-stage build，tag 用 commit SHA 確保唯一性
       - name: Build & Push backend image
         run: |
-          docker build \
-            -t ${{ env.REGISTRY }}/backend:${{ github.sha }} \
-            ./backend-api
+          docker build -t ${{ env.REGISTRY }}/backend:${{ github.sha }} ./backend-api
           docker push ${{ env.REGISTRY }}/backend:${{ github.sha }}
 
       # 部署到 Cloud Run，並取回服務 URL
@@ -99,7 +102,10 @@ jobs:
   deploy-frontend:
     name: Build & Deploy Frontend
     runs-on: ubuntu-latest
-    needs: deploy-backend  # 依賴後端部署完成
+    needs: deploy-backend
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -118,9 +124,7 @@ jobs:
 
       - name: Build & Push frontend image
         run: |
-          docker build \
-            -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} \
-            ./frontend-ui
+          docker build -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} ./frontend-ui
           docker push ${{ env.REGISTRY }}/frontend:${{ github.sha }}
 
       - name: Deploy frontend to Cloud Run
