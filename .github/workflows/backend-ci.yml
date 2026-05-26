@@ -57,6 +57,7 @@ jobs:
       - name: Run Tests
         working-directory: backend-api
         run: |
+          chmod +x ./mvnw
           ./mvnw test \
             -Dspring.profiles.active=ci \
             --no-transfer-progress
