@@ -12,10 +12,9 @@ on:
 # 消除 Node.js 20 deprecation 警告
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: jfinancial
   REGION: asia-east1
-  # Artifact Registry 完整路徑
-  REGISTRY: asia-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/jfinancial-repo
+  REGISTRY: asia-east1-docker.pkg.dev/jfinancial/jfinancial-repo
 
 # =====================================================
 # Job 1：後端 — Build image + Deploy to Cloud Run
@@ -64,7 +63,7 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGISTRY }}/backend:${{ github.sha }}
           # 掛載 Cloud SQL Auth Proxy（讓 Spring Boot 可透過 Unix Socket 連線）
-          add_cloudsql_instances: ${{ env.PROJECT_ID }}:${{ env.REGION }}:jfinancial-db
+          add_cloudsql_instances: jfinancial:${{ env.REGION }}:jfinancial-db
           env_vars: |
             SPRING_PROFILES_ACTIVE=prod
             SPRING_DATASOURCE_USERNAME=root
