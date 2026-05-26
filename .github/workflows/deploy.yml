@@ -66,7 +66,13 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             FRED_API_KEY=${{ secrets.FRED_API_KEY }}
             FUGLE_API_KEY=${{ secrets.FUGLE_API_KEY }}
-            CORS_ALLOWED_ORIGINS=*
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID=${{ secrets.GH_OAUTH_CLIENT_ID }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET=${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+            ECPAY_NOTIFY_URL=${{ secrets.ECPAY_NOTIFY_URL }}
+            CORS_ALLOWED_ORIGINS=${{ secrets.FRONTEND_URL != '' && secrets.FRONTEND_URL || '*' }}
+            FRONTEND_BASE_URL=${{ secrets.FRONTEND_URL != '' && secrets.FRONTEND_URL || 'https://placeholder.run' }}
           # Cloud Run 服務設定
           flags: |
             --allow-unauthenticated
@@ -76,7 +82,12 @@ jobs:
             --cpu=1
 
       - name: Show backend URL
-        run: echo "Backend deployed to ${{ steps.deploy.outputs.url }}"
+        run: |
+          echo "Backend deployed to ${{ steps.deploy.outputs.url }}"
+          echo ""
+          echo "⚠️  首次部署後請記下前端 URL，"
+          echo "   並在 GitHub Secrets 新增 FRONTEND_URL，"
+          echo "   再觸發一次 workflow 讓 CORS 設定正確生效。"
 
 # =====================================================
 # Job 2：前端 — Build image + Deploy to Cloud Run
