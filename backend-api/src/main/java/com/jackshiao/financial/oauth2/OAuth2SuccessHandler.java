@@ -49,7 +49,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 將 JWT 存入 HttpOnly Cookie，JS 無法讀取，防止 XSS 竊取 token
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
-                .secure(false)          // 正式環境改為 true（HTTPS）
+                .secure(true)           // HTTPS only（Cloud Run 生產環境）
                 .sameSite("Lax")        // Lax 允許從第三方 redirect 帶入 cookie
                 .path("/")
                 .maxAge(86400)          // 與 JWT 有效期一致（24 小時）
