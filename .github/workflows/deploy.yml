@@ -1,0 +1,153 @@
+name: Deploy to GCP
+
+# 只有 main 分支的 push 才觸發部署
+# （CICD 分支學完後 squash merge 回 main 就會自動觸發）
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# 消除 Node.js 20 deprecation 警告
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PROJECT_ID: jfinancial
+  REGION: asia-east1
+  REGISTRY: asia-east1-docker.pkg.dev/jfinancial/jfinancial-repo
+
+# =====================================================
+# Job 1：後端 — Build image + Deploy to Cloud Run
+# =====================================================
+jobs:
+  deploy-backend:
+    name: Build & Deploy Backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # actions/checkout 需要
+      id-token: write  # google-github-actions/auth 需要
+
+    # 將 Cloud Run URL 傳給下一個 Job
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 用 Service Account 金鑰向 GCP 驗證
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 讓 Docker 可以推送到 Artifact Registry
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # Multi-stage build，tag 用 commit SHA 確保唯一性
+      - name: Build & Push backend image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/backend:${{ github.sha }} ./backend-api
+          docker push ${{ env.REGISTRY }}/backend:${{ github.sha }}
+
+      # 計算有 fallback 的環境變數（GitHub Actions || 運算子對未設定 secret 回傳空值，改用 bash 處理）
+      - name: Resolve deploy env defaults
+        id: env-defaults
+        run: |
+          FE_URL="${{ secrets.FRONTEND_URL }}"
+          echo "cors_origins=${FE_URL:-*}" >> "$GITHUB_OUTPUT"
+          echo "frontend_base_url=${FE_URL:-https://placeholder.run}" >> "$GITHUB_OUTPUT"
+
+      # 部署到 Cloud Run，並取回服務 URL
+      - name: Deploy backend to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: jfinancial-backend
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/backend:${{ github.sha }}
+          env_vars: |
+            SPRING_PROFILES_ACTIVE=prod
+            SPRING_DATASOURCE_USERNAME=root
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            FRED_API_KEY=${{ secrets.FRED_API_KEY }}
+            FUGLE_API_KEY=${{ secrets.FUGLE_API_KEY }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID=${{ secrets.GH_OAUTH_CLIENT_ID }}
+            SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET=${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+            ECPAY_NOTIFY_URL=https://jfinancial-backend-gghtso4rrq-de.a.run.app/api/payment/ecpay/notify
+            CORS_ALLOWED_ORIGINS=${{ steps.env-defaults.outputs.cors_origins }}
+            FRONTEND_BASE_URL=${{ steps.env-defaults.outputs.frontend_base_url }}
+          # Cloud SQL Auth Proxy 必須放在 flags 裡（不是 action input）
+          flags: |
+            --add-cloudsql-instances=jfinancial:asia-east1:jfinancial-db
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=3
+            --memory=512Mi
+            --cpu=1
+
+      - name: Show backend URL
+        run: |
+          echo "Backend deployed to ${{ steps.deploy.outputs.url }}"
+          echo ""
+          echo "⚠️  首次部署後請記下前端 URL，"
+          echo "   並在 GitHub Secrets 新增 FRONTEND_URL，"
+          echo "   再觸發一次 workflow 讓 CORS 設定正確生效。"
+
+# =====================================================
+# Job 2：前端 — Build image + Deploy to Cloud Run
+# 等後端部署完才執行（需要後端 URL 作為 nginx proxy 目標）
+# =====================================================
+  deploy-frontend:
+    name: Build & Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build & Push frontend image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} ./frontend-ui
+          docker push ${{ env.REGISTRY }}/frontend:${{ github.sha }}
+
+      - name: Deploy frontend to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: jfinancial-frontend
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/frontend:${{ github.sha }}
+          env_vars: |
+            NGINX_BACKEND_URL=${{ needs.deploy-backend.outputs.url }}
+          flags: |
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=2
+            --memory=256Mi
+            --cpu=1
+            --port=80
+
+      - name: Show frontend URL
+        run: echo "Frontend deployed to ${{ steps.deploy.outputs.url }}"

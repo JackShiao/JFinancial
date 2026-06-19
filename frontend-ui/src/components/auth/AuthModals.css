@@ -1,0 +1,9 @@
+@media (max-width: 576px) {
+  .auth-modal .modal-dialog {
+    margin: 1.75rem auto;
+  }
+
+  .auth-modal .modal-content {
+    border-radius: 1.5rem;
+  }
+}

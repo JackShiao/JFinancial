@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>關於財經網 About</title>
+    <link rel="stylesheet" href="./bootstrap-icons-1.13.1/bootstrap-icons.css">
+    <link rel="stylesheet" href="./bootstrap-5.3.8-dist/css/bootstrap.css">
+    <link rel="stylesheet" href="./bootstrap-5.3.8-examples/modals/modals.css">
+    <link rel="stylesheet" href="./SP_css/BS_home_header.css">
+    <link rel="stylesheet" href="./SP_css/g_search.css">
+    <link rel="stylesheet" href="./SP_css/about.css">
+    <link rel="stylesheet" href="./SP_css/footer.css">
+
+    <style>
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- 參考 BS header example 4 -->
+    <header class="sticky-top">
+        <nav class="p-2 navbar navbar-expand-lg navbar-dark bg-dark" aria-label="主導覽列">
+            <div class="container">
+
+                <a href="./SP_ver_1.html">
+                    <img class="navbar-brand fs-3 mx-lg-0 me-lg-4 text-decoration-none text-white"
+                        src="./SP_img/Jlogo.png" alt="J財經網" style="height: 50px; width: auto;">
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                    aria-controls="mainNavbar" aria-expanded="false" aria-label="切換選單">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li><a href="./SP_ver_1.html" class="nav-link px-2 text-white ">首頁</a></li>
+                        <li><a href="./market.html" class="nav-link px-2 text-white">市場指數</a></li>
+                        <li><a href="./news.html" class="nav-link px-2 text-white">新聞專區</a></li>
+                        <li><a href="#" class="nav-link px-2 text-secondary active" aria-current="page">關於</a></li>
+                    </ul>
+
+                    <!-- <div class="gcse-search" aria-label="Google全站搜尋"></div> -->
+
+                    <div class="d-flex flex-lg-row flex-column align-items-center">
+                        <button type="button" class="btn btn-outline-light w-100 w-lg-auto mb-2 mb-lg-0 me-lg-2"
+                            data-bs-toggle="modal" data-bs-target="#loginModal">登入</button>
+                        <button type="button" class="btn btn-warning w-100 w-lg-auto mb-lg-0 mb-2 text-nowrap"
+                            data-bs-toggle="modal" data-bs-target="#registerModal">
+                            註冊會員
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+    </header>
+
+
+    <main>
+        <!-- carousel -->
+        <div id="myCarousel" class="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="./SP_img/about/GforMe.png" class="d-block w-100" alt="關於大圖"
+                        style="height: 500px; object-fit: cover; object-position: center 40%;" aria-hidden="true"
+                        loading="lazy" />
+                    <div class="container">
+                        <div class="carousel-caption">
+                            <h1>About</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- marketing -->
+        <div class="container marketing">
+            <!-- START THE FEATURETTES -->
+            <div class="row featurette">
+
+                <div class="col-md-5 order-md-1">
+                    <img src="./SP_img/about/969A9964-2F07-4CDA-A417-B75F040991DB.jpg" alt="J"
+                        class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto"
+                        loading="lazy"
+                        style="width: 400px; height: 500px; object-fit: cover; object-position: center 90%;" />
+                </div>
+                <div
+                    class="col-md-7 order-md-2 mt-md-0 mt-4 d-flex align-items-center justify-content-center flex-column">
+                    <p class="fs-4 fw-bold">
+                        哈摟，我是蕭宇傑，這是一個由我個人興趣所建立的財經資訊網站，目的是希望能夠提供一個簡單實用的平台，
+                        讓使用者可以方便地查詢各種財經資訊，追蹤一些即時新聞等。
+                    </p>
+                    <p class="fs-5">製作這個網站的動機，主要是因為上一份工作是在銀行做理財專員，時不時會跟主管還有客戶報告目前市場狀況，
+                        網站的內容是我平常蒐集資料的方向，目前仍在持續完善中，若有任何建議或想法，請不吝指教！</p>
+                </div>
+
+            </div>
+
+            <hr class="featurette-divider" />
+
+            <div class="row featurette">
+                <div class="col-md-7">
+                    <h2 class="featurette-heading fw-normal lh-1">
+                        你有發現嗎？
+                    </h2>
+                    <p class="mt-2 text-body-secondary fs-1">其實網站裡很多張圖片是使用AI生成</p>
+                    <p class="fs-5">
+                        像是這張圖片就是用Google Gemini生成，你應該會發現吉他上面的Gemini logo，
+                        我在每張AI生成的圖片都放上了對應的AI logo
+                    </p>
+                    <p class="mt-5 fs-5">財經網總共有11張圖片是由AI生成，你能找到藏在圖片裡所有的logo嗎？</p>
+                    <div>
+                        <div class="btn btn-light" onclick="showAnswer()">解答</div>
+                        <span id="answer"></span>
+                    </div>
+                    <p class="mt-3">圖片來源：
+                        <a href="./SP_img/圖片資訊.txt" target="_blank" rel="noopener">圖片資訊.txt</a>
+                        、Google Gemini <img src="./SP_img/Gemini.png" alt="Google Gemini logo" style="width: 30px;">
+                        、ChatGPT <img src="./SP_img/chatGPT.png" alt="ChatGPT logo" style="width: 30px;">
+                        、Nanobanana.io <span style="font-size: 20px;">🍌</span>
+                    </p>
+                </div>
+                <div class="col-md-5 d-flex align-items-center justify-content-center">
+                    <img src="./SP_img/about/myFAV.png" alt="興趣"
+                        class="bd-placeholder-img bd-placeholder-img-lg featurette-image img-fluid mx-auto"
+                        loading="lazy" style="object-fit: cover;" />
+                </div>
+            </div>
+            <hr class="featurette-divider" />
+        </div>
+    </main>
+
+
+
+
+    <footer class="footer mt-auto py-3 text-bg-dark">
+        <div class="container text-center">
+            <span class="fs-5"> Copyright © 2025 傑的財經資訊網站</span>
+        </div>
+    </footer>
+
+
+
+
+
+    <!-- 登入 Modal -->
+    <div class="modal modal-sheet fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <div class="d-flex w-100 align-items-center justify-content-center position-relative">
+                        <h1 class="fw-bold mb-0 fs-2" id="loginModalLabel">登入</h1>
+                        <button type="button" class="btn-close position-absolute end-0" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-5 pt-0">
+                    <form>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control rounded-3" id="loginEmail"
+                                placeholder="name@example.com">
+                            <label for="loginEmail">電子郵件</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="loginPassword"
+                                placeholder="請輸入密碼">
+                            <label for="loginPassword">密碼</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="showLoginPassword">
+                                <label class="form-check-label" for="showLoginPassword">顯示密碼</label>
+                            </div>
+                        </div>
+                        <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit">登入</button>
+                        <small class="d-flex text-body-secondary justify-content-center">登入即表示同意本站使用條款。</small>
+                        <hr class="my-4" />
+                        <h2 class="fs-5 fw-bold mb-3 d-flex justify-content-center">或使用第三方登入</h2>
+                        <a href="https://www.google.com/" target="_blank" rel="noopener">
+                            <button class="w-100 py-2 mb-2 btn btn-outline-secondary rounded-3" type="button">
+                                <i class="bi bi-google me-1"></i> Google 登入
+                            </button>
+                        </a>
+                        <a href="https://www.facebook.com/" target="_blank" rel="noopener">
+                            <button class="w-100 py-2 mb-2 btn btn-outline-primary rounded-3" type="button">
+                                <i class="bi bi-facebook me-1"></i> Facebook 登入
+                            </button>
+                        </a>
+                        <a href="https://github.com/" target="_blank" rel="noopener">
+                            <button class="w-100 py-2 mb-2 btn btn-outline-secondary rounded-3" type="button">
+                                <i class="bi bi-github me-1"></i> GitHub 登入
+                            </button>
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 註冊 Modal -->
+    <div class="modal modal-sheet fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header p-5 pb-4 border-bottom-0">
+                    <div class="d-flex w-100 align-items-center justify-content-center position-relative">
+                        <h1 class="fw-bold mb-0 fs-2" id="registerModalLabel">註冊會員</h1>
+                        <button type="button" class="btn-close position-absolute end-0" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-5 pt-0">
+                    <form>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control rounded-3" id="registerEmail"
+                                placeholder="name@example.com">
+                            <label for="registerEmail">電子郵件</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="registerPassword"
+                                placeholder="請輸入密碼">
+                            <label for="registerPassword">密碼</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control rounded-3" id="registerPassword2"
+                                placeholder="請再次輸入密碼">
+                            <label for="registerPassword2">確認密碼</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="showRegisterPassword">
+                                <label class="form-check-label" for="showRegisterPassword">顯示密碼</label>
+                            </div>
+                        </div>
+                        <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit">註冊</button>
+                        <small class="text-body-secondary d-flex justify-content-center">註冊即表示同意本站使用條款。</small>
+                        <hr class="my-4" />
+                        <h2 class="fs-5 fw-bold mb-3 d-flex justify-content-center">或使用第三方登入</h2>
+                        <a href="https://www.google.com/" target="_blank" rel="noopener">
+                            <button class="w-100 py-2 mb-2 btn btn-outline-secondary rounded-3" type="button">
+                                <i class="bi bi-google me-1"></i> Google 登入
+                            </button>
+                        </a>
+                        <a href="https://www.facebook.com/" target="_blank" rel="noopener">
+                            <button class="w-100 py-2 mb-2 btn btn-outline-primary rounded-3" type="button">
+                                <i class="bi bi-facebook me-1"></i> Facebook 登入
+                            </button>
+                        </a>
+                        <a href="https://github.com/" target="_blank" rel="noopener">
+                            <button class="w-100 py-2 mb-2 btn btn-outline-secondary rounded-3" type="button">
+                                <i class="bi bi-github me-1"></i> GitHub 登入
+                            </button>
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script async src="https://cse.google.com/cse.js?cx=77c73c23d18594f95"></script>
+    <script src="./bootstrap-5.3.8-dist/js/bootstrap.js"></script>
+    <script src="./SP_js/login_register.js"></script>
+    <script>
+        function showAnswer() {
+            document.getElementById("answer").innerHTML =
+                `14<img src="./SP_img/Gemini.png" alt="Google Gemini logo" style="width: 30px;">
+                、1<img src="./SP_img/chatGPT.png" alt="ChatGPT logo" style="width: 30px;">
+                、1<span style="font-size: 20px;">🍌</span>`;
+        }
+    </script>
+</body>
+
+</html>

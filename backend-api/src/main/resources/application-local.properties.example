@@ -1,0 +1,31 @@
+# ============================================================
+# application-local.properties — 本機開發設定範本
+# 複製此檔並重新命名為 application-local.properties，填入實際值。
+# 此檔案可提交版控；application-local.properties 已加入 .gitignore。
+# ============================================================
+
+# FRED API Key（美國公債殖利率 / 美股指數）
+# 免費申請：https://fred.stlouisfed.org/docs/api/api_key.html
+fred.api.key=YOUR_FRED_API_KEY
+
+# Fugle API Key（台股加權指數即時資料）
+# 申請：https://developer.fugle.tw/
+# 若未設定，後端會印出 warn 並跳過台股即時更新，不影響其他功能。
+fugle.api.key=YOUR_FUGLE_API_KEY
+
+# JWT 密鑰（建議 256-bit 以上隨機字串，請勿使用預設值）
+jwt.secret=YOUR_JWT_SECRET_AT_LEAST_32_CHARS
+
+# ECPay 綠界付款通知 URL（本機開發請使用 ngrok 等工具暴露本機）
+# 格式：https://<your-ngrok-domain>/api/payment/ecpay/notify
+ecpay.notify-url=YOUR_NGROK_URL/api/payment/ecpay/notify
+
+# Google OAuth2（至 Google Cloud Console 建立 OAuth 2.0 用戶端）
+# Authorized redirect URI：http://localhost:8080/login/oauth2/code/google
+spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+
+# GitHub OAuth2（至 GitHub → Settings → Developer settings → OAuth Apps 建立）
+# Authorization callback URL：http://localhost:8080/login/oauth2/code/github
+spring.security.oauth2.client.registration.github.client-id=YOUR_GITHUB_CLIENT_ID
+spring.security.oauth2.client.registration.github.client-secret=YOUR_GITHUB_CLIENT_SECRET

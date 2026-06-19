@@ -1,0 +1,25 @@
+.footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-link:hover {
+  color: #fff;
+}
+/* 
+  ========================================
+  Footer 樣式 - 重構版本
+  ========================================
+  修改說明：
+  - 移除對 container 的寬度限制（原本限制最寬 680px）
+  - footer 最外層現已 100% 滿版延展
+  - 內部 container 使用 Bootstrap 預設的響應式寬度：
+    • 小螢幕：幾乎滿寬（除 padding）
+    • 中等以上螢幕：自動居中，最寬依螢幕大小調整
+  ======================================== 
+*/
+
+.site-footer-copy {
+  font-size: 1.25rem;
+}

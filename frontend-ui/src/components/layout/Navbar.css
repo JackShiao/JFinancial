@@ -1,0 +1,140 @@
+.brand-logo {
+  width: auto;
+  height: 3rem;
+  object-fit: contain;
+}
+
+/* 
+  ========================================
+  Navbar 結構優化 - 最外層滿版設計
+  ========================================
+*/
+
+/* 確保 header 最外層 100% 滿版延展，不受任何寬度限制 */
+header {
+  width: 100%;
+}
+
+/* 
+  nav.navbar 本身就是 fluid 的（寬度 100%）
+  內部的 container 則自動根據螢幕尺寸調整寬度並居中
+*/
+
+.brand-text {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* 搜尋結果項目：左右兩側排版 */
+.navbar-search-dropdown {
+  min-width: 320px;
+}
+
+.navbar-search-result-item {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-search-result-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.navbar-search-result-symbol {
+  flex-shrink: 0;
+}
+
+.navbar-search-result-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.navbar-search-result-price {
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+/* 搜尋結果底部筆數提示 */
+.navbar-search-result-footer {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  color: #6c757d;
+  border-top: 1px solid #e9ecef;
+  text-align: right;
+}
+
+.navbar-search-placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
+  margin: 1rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+}
+
+@media (min-width: 992px) {
+  .navbar-search-placeholder {
+    margin: 0 1rem 0 0;
+  }
+}
+
+/* 搜尋欄 placeholder 半透明白色 */
+.navbar-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ========================================
+   RWD 手機版優化 (< 992px)
+   ======================================== */
+@media (max-width: 991.98px) {
+  /* 搜尋框：全寬 + 頂部分隔線 */
+  .navbar-search-wrapper {
+    width: 100%;
+    margin-right: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  /* 搜尋結果下拉：防止超出螢幕 */
+  .navbar-search-dropdown {
+    min-width: unset;
+    left: 0;
+    right: 0;
+  }
+
+  /* 按鈕區全寬 */
+  .navbar-action-group {
+    width: 100%;
+    padding-bottom: 0.5rem;
+  }
+
+  /* 會員 dropdown 按鈕與登入/註冊按鈕全寬 */
+  .navbar-action-group .dropdown,
+  .navbar-action-group .btn {
+    width: 100%;
+  }
+
+  /* 會員下拉選單：嵌入正常文件流，不浮動遮蓋頁面內容 */
+  .navbar-action-group .dropdown-menu {
+    position: static !important;
+    width: 100%;
+    margin-top: 0.25rem;
+    float: none;
+  }
+}

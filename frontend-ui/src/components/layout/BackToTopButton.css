@@ -1,0 +1,41 @@
+.back-to-top-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 20px;
+  z-index: 1050;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bs-primary);
+  color: #fff;
+  border: none;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+
+  /* 預設隱藏：透明 + 往下偏移 */
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.back-to-top-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.back-to-top-btn:hover {
+  filter: brightness(1.12);
+}
+
+.back-to-top-btn:focus {
+  outline: none;
+  background-color: var(--bs-primary);
+}
+
+.back-to-top-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.75);
+  outline-offset: 2px;
+}

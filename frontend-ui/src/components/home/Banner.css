@@ -1,0 +1,59 @@
+.banner-section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.banner-visual {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+}
+
+.banner-image {
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-slide-1 {
+  background:
+    linear-gradient(120deg, rgba(8, 18, 46, 0.88), rgba(28, 67, 143, 0.8)),
+    radial-gradient(circle at 20% 20%, rgba(247, 197, 72, 0.45), transparent 45%);
+}
+
+.banner-slide-2 {
+  background:
+    linear-gradient(130deg, rgba(35, 23, 58, 0.88), rgba(138, 32, 91, 0.78)),
+    radial-gradient(circle at 80% 35%, rgba(255, 210, 104, 0.35), transparent 50%);
+}
+
+.banner-slide-3 {
+  background:
+    linear-gradient(130deg, rgba(19, 60, 48, 0.9), rgba(27, 112, 98, 0.78)),
+    radial-gradient(circle at 70% 10%, rgba(250, 196, 88, 0.34), transparent 45%);
+}
+
+.banner-caption {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 700px;
+}
+
+@media (max-width: 576px) {
+  .banner-visual {
+    height: 320px;
+  }
+
+  .banner-caption {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    max-width: 95vw;
+  }
+
+  .banner-caption .display-4 {
+    font-size: 1.55rem;
+  }
+
+  .banner-caption .lead {
+    font-size: 1rem;
+  }
+}

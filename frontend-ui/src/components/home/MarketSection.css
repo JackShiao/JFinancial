@@ -1,0 +1,56 @@
+.market-section {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 卡片基礎樣式 */
+.market-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 滑鼠懸停微互動：上浮與陰影加深 */
+.market-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 標籤對齊 */
+.market-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* 數字字體微調 */
+.market-value {
+  letter-spacing: -0.02em;
+}
+
+.market-note {
+  margin-bottom: 0.75rem;
+}
+
+/* 查看更多按鈕過渡 */
+.btn-more-market {
+  transition: transform 0.2s ease;
+}
+.btn-more-market:hover {
+  transform: scale(1.02);
+}
+
+/* 更新按鈕旋轉動畫 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-icon {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}

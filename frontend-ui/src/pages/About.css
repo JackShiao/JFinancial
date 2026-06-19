@@ -1,0 +1,40 @@
+.about-page .about-hero {
+  margin-bottom: 4rem;
+}
+
+.about-page .about-hero-caption {
+  top: 35%;
+  z-index: 10;
+}
+
+.about-page .about-hero-image {
+  height: 500px;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.about-page .featurette-divider {
+  margin: 5rem 0;
+}
+
+.about-page .featurette-heading {
+  letter-spacing: -0.05rem;
+}
+
+@media (min-width: 40em) {
+  .about-page .about-hero-caption p {
+    margin-bottom: 1.25rem;
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  .about-page .featurette-heading {
+    font-size: 50px;
+  }
+}
+
+@media (min-width: 62em) {
+  .about-page .featurette-heading {
+    margin-top: 7rem;
+  }
+}

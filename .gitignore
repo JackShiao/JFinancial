@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+*.iml
+.vscode/*
+.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Backend (Spring Boot / Maven)
+backend-api/target/
+backend-api/build/
+backend-api/out/
+backend-api/.classpath
+backend-api/.factorypath
+backend-api/.project
+backend-api/.settings/
+backend-api/.apt_generated
+backend-api/.springBeans
+backend-api/.sts4-cache
+
+# Frontend (React / Vite)
+frontend-react/node_modules/
+frontend-react/dist/
+frontend-react/.vite/
+frontend-react/coverage/
+frontend-react/.eslintcache
+frontend-react/*.tsbuildinfo
+
+# GitHub 提示
+.github/instructions/
+
+# 其他
+keep.md
+git_tips.md
+pre-merge-notes.md
