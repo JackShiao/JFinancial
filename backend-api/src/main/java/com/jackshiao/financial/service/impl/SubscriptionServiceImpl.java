@@ -104,6 +104,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         String checkMacValue = EcpayUtil.buildCheckMacValue(params, hashKey, hashIv);
         params.put("CheckMacValue", checkMacValue);
 
+        log.info("[ECPay Checkout] tradeNo={}, ReturnURL={}, OrderResultURL={}",
+                tradeNo, params.get("ReturnURL"), params.get("OrderResultURL"));
+
         // 產生自動提交的 HTML form
         String formHtml = buildFormHtml(params);
         return new CheckoutResponseDto(tradeNo, formHtml);

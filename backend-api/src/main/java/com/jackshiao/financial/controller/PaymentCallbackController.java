@@ -71,7 +71,8 @@ public class PaymentCallbackController {
     @PostMapping(value = "/ecpay/notify",
                  consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String handleEcpayNotify(@RequestParam Map<String, String> params) {
-        log.info("[ECPay Notify] 收到回呼, MerchantTradeNo={}", params.get("MerchantTradeNo"));
+        log.info("[ECPay Notify] 收到回呼, MerchantTradeNo={}, RtnCode={}, all={}",
+                params.get("MerchantTradeNo"), params.get("RtnCode"), params);
         return subscriptionService.handleEcpayNotify(params);
     }
 }
