@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.jackshiao.financial.oauth2.CookieOAuth2AuthorizationRequestRepository;
 import com.jackshiao.financial.oauth2.OAuth2SuccessHandler;
 import com.jackshiao.financial.service.CustomOAuth2UserService;
 import com.jackshiao.financial.service.CustomOidcUserService;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomOidcUserService customOidcUserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final CookieOAuth2AuthorizationRequestRepository cookieAuthRequestRepository;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -85,6 +87,8 @@ public class SecurityConfig {
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(auth -> auth
+                    .authorizationRequestRepository(cookieAuthRequestRepository))
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)        // GitHub (OAuth2)
                     .oidcUserService(customOidcUserService))    // Google (OIDC)
@@ -97,9 +101,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        // 一般 API：只允許前端 localhost（payment/** 由獨立 FilterChain 處理，不在此設定）
+        // 一般 API：只允許前端來源（payment/** 由獨立 FilterChain 處理，不在此設定）
+        // 使用 setAllowedOriginPatterns 而非 setAllowedOrigins，
+        // 才能同時支援 allowCredentials=true 與萬用字元 *（CORS 規範不允許兩者同用）
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins));
+        config.setAllowedOriginPatterns(List.of(allowedOrigins));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

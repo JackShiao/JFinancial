@@ -1,0 +1,45 @@
+name: Frontend CI
+
+# 觸發條件：push 或 PR 時，只要 frontend-ui/ 有異動就觸發
+on:
+  push:
+    paths:
+      - 'frontend-ui/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    paths:
+      - 'frontend-ui/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  test:
+    name: Lint & Test (Node.js 20)
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 取得程式碼
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. 設定 Node.js 20，並啟用 npm 相依套件快取
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-ui/package-lock.json
+
+      # 3. 安裝相依套件（ci 模式：嚴格依照 package-lock.json，不允許版本飄移）
+      - name: Install Dependencies
+        working-directory: frontend-ui
+        run: npm ci
+
+      # 4. ESLint 靜態分析（有 lint error 就讓 CI 失敗）
+      - name: Lint
+        working-directory: frontend-ui
+        run: npm run lint
+
+      # 5. 執行 Vitest 單元測試
+      - name: Run Tests
+        working-directory: frontend-ui
+        run: npm test
