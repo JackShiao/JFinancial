@@ -6,8 +6,10 @@ import { useAuthStore } from '../store/authStore'
 /**
  * ECPay 付款結果頁
  *
- * ECPay 前台回跳（OrderResultURL）時會帶上 RtnCode、RtnMsg 等 query 參數。
- * 頁面同時呼叫後端確認實際訂閱狀態，避免只信任前台參數。
+ * 設計原則：
+ * - RtnCode=1 → ECPay 前台確認付款完成，樂觀顯示「付款成功」
+ * - 同時背景輪詢後端確認訂閱是否已啟用（S2S Notify 可能延遲數分鐘）
+ * - 訂閱啟用後更新 isPremium 狀態；若 30 秒內仍未啟用，顯示「稍後確認」提示
  */
 export default function SubscriptionResult() {
   const [searchParams] = useSearchParams()
@@ -15,21 +17,22 @@ export default function SubscriptionResult() {
   const [status, setStatus] = useState(null)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const setIsPremium = useAuthStore((s) => s.setIsPremium)
-  const [loading, setLoading] = useState(isLoggedIn)
-  const [hasError, setHasError] = useState(false)
-  const [countdown, setCountdown] = useState(5) // 初始值即為 5，effect 只負責遞減
+  const [subscriptionConfirmed, setSubscriptionConfirmed] = useState(false)
+  const [countdown, setCountdown] = useState(5)
+  const rtnCode = searchParams.get('RtnCode')
   const rtnMsg = searchParams.get('RtnMsg')
+  // ECPay RtnCode=1 代表前台付款成功
+  const ecpaySuccess = rtnCode === '1'
   // ECPay 失敗時偶爾回傳 "Succeeded" 等無意義英文訊息，過濾後才顯示
   const displayRtnMsg = rtnMsg && !/^succeeded$/i.test(rtnMsg.trim()) ? rtnMsg : null
 
+  // 背景輪詢後端：確認 S2S Notify 是否已處理（最多 10 次 × 5 秒 = 50 秒）
   useEffect(() => {
-    if (!isLoggedIn) return
+    if (!isLoggedIn || !ecpaySuccess) return
 
-    // ECPay S2S Notify 為非同步，瀏覽器跳回時 Notify 可能尚未處理完。
-    // 最多輪詢 6 次（每次 3 秒），若訂閱變 active 則提前結束。
     let attempts = 0
-    const MAX_ATTEMPTS = 6
-    const INTERVAL_MS = 3000
+    const MAX_ATTEMPTS = 10
+    const INTERVAL_MS = 5000
 
     const poll = () => {
       getSubscriptionStatus()
@@ -38,27 +41,24 @@ export default function SubscriptionResult() {
           if (res.data?.active) {
             setStatus(res.data)
             setIsPremium(true)
-            setLoading(false)
+            setSubscriptionConfirmed(true)
           } else if (attempts < MAX_ATTEMPTS) {
             setTimeout(poll, INTERVAL_MS)
-          } else {
-            setStatus(res.data)
-            setLoading(false)
           }
+          // 超過次數就不再輪詢，畫面仍顯示「付款成功，稍後生效」
         })
         .catch(() => {
-          setHasError(true)
-          setLoading(false)
+          // 輪詢失敗不影響主畫面，靜默忽略
         })
     }
 
     poll()
-  }, [isLoggedIn, setIsPremium])
+  }, [isLoggedIn, ecpaySuccess, setIsPremium])
 
-  // 付款結果確認後，倒數 5 秒自動跳轉
+  // 付款成功後倒數自動跳轉
   useEffect(() => {
-    if (loading || !isLoggedIn || hasError) return
-    const target = status?.active ? '/market' : '/subscription'
+    if (!ecpaySuccess || !isLoggedIn) return
+    const target = '/market'
     let count = 5
     const timer = setInterval(() => {
       count -= 1
@@ -69,68 +69,62 @@ export default function SubscriptionResult() {
       }
     }, 1000)
     return () => clearInterval(timer)
-  }, [loading, status, isLoggedIn, hasError, navigate])
+  }, [ecpaySuccess, isLoggedIn, navigate])
 
-  const isPaid = status?.active
-
-  if (!loading && hasError) {
+  // ── 付款失敗 ───────────────────────────────────────────────
+  if (!ecpaySuccess) {
     return (
       <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
-        <div className="display-1 mb-3">⚠️</div>
-        <h2 className="fw-bold">訂閱狀態驗證失敗</h2>
-        <p className="text-muted mt-2">無法確認付款結果，請稍後重新整理頁面，或前往訂閱頁面查看狀態。</p>
+        <div className="display-1 mb-3">❌</div>
+        <h2 className="fw-bold text-danger">付款未完成</h2>
+        <p className="text-muted mt-2">
+          {displayRtnMsg || '交易已取消或發生錯誤，請重新嘗試。'}
+        </p>
+        <p className="text-muted small">若金額已扣款，請聯絡客服處理。</p>
         <Link to="/subscription" className="btn btn-outline-primary mt-3">
-          前往訂閱頁面
+          返回訂閱頁面
         </Link>
       </div>
     )
   }
 
+  // ── 未登入 ────────────────────────────────────────────────
+  if (!isLoggedIn) {
+    return (
+      <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
+        <div className="display-1 mb-3">🔒</div>
+        <h2 className="fw-bold">請先登入</h2>
+        <p className="text-muted mt-2">請登入後才能確認您的訂閱狀態。</p>
+        <Link to="/" className="btn btn-outline-primary mt-3">
+          回首頁
+        </Link>
+      </div>
+    )
+  }
+
+  // ── 付款成功（RtnCode=1）─────────────────────────────────
   return (
     <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
-      {loading ? (
-        <div>
-          <div className="spinner-border text-primary" role="status" />
-          <p className="text-muted mt-3">正在確認付款結果，請稍候…</p>
-        </div>
-      ) : !isLoggedIn ? (
-        <>
-          <div className="display-1 mb-3">🔒</div>
-          <h2 className="fw-bold">請先登入</h2>
-          <p className="text-muted mt-2">請登入後才能確認您的訂閱狀態。</p>
-          <Link to="/" className="btn btn-outline-primary mt-3">
-            回首頁
-          </Link>
-        </>
-      ) : isPaid ? (
-        <>
-          <div className="display-1 mb-3">🎉</div>
-          <h2 className="fw-bold text-success">付款成功！</h2>
-          <p className="text-muted mt-2">
-            你的 Premium 訂閱已啟用。
-            {status?.expireAt && (
-              <> 有效期至：<strong>{new Date(status.expireAt).toLocaleDateString('zh-TW')}</strong></>
-            )}
-          </p>
-          <Link to="/market" className="btn btn-primary mt-3">
-            前往市場頁查看進階圖表
-          </Link>
-          <p className="text-muted small mt-3">{countdown} 秒後自動跳轉…</p>
-        </>
+      <div className="display-1 mb-3">🎉</div>
+      <h2 className="fw-bold text-success">付款成功！</h2>
+      {subscriptionConfirmed ? (
+        <p className="text-muted mt-2">
+          你的 Premium 訂閱已啟用。
+          {status?.expireAt && (
+            <> 有效期至：<strong>{new Date(status.expireAt).toLocaleDateString('zh-TW')}</strong></>
+          )}
+        </p>
       ) : (
-        <>
-          <div className="display-1 mb-3">❌</div>
-          <h2 className="fw-bold text-danger">付款未完成</h2>
-          <p className="text-muted mt-2">
-            {displayRtnMsg || '交易已取消或發生錯誤，請重新嘗試。'}
-          </p>
-          <p className="text-muted small">若金額已扣款，請聯絡客服處理。</p>
-          <Link to="/subscription" className="btn btn-outline-primary mt-3">
-            返回訂閱頁面
-          </Link>
-          <p className="text-muted small mt-3">{countdown} 秒後自動跳轉…</p>
-        </>
+        <p className="text-muted mt-2">
+          訂閱權益正在啟用中，通常需要 1～2 分鐘生效。
+          <br />
+          <span className="small">若長時間未更新，請重新整理頁面查看狀態。</span>
+        </p>
       )}
+      <Link to="/market" className="btn btn-primary mt-3">
+        前往市場頁
+      </Link>
+      <p className="text-muted small mt-3">{countdown} 秒後自動跳轉…</p>
     </div>
   )
 }
