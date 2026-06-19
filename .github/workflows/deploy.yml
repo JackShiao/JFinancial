@@ -81,6 +81,7 @@ jobs:
             SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
             SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID=${{ secrets.GH_OAUTH_CLIENT_ID }}
             SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET=${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+            ECPAY_NOTIFY_URL=https://jfinancial-backend-gghtso4rrq-de.a.run.app/api/payment/ecpay/notify
             CORS_ALLOWED_ORIGINS=${{ steps.env-defaults.outputs.cors_origins }}
             FRONTEND_BASE_URL=${{ steps.env-defaults.outputs.frontend_base_url }}
           # Cloud SQL Auth Proxy 必須放在 flags 裡（不是 action input）
