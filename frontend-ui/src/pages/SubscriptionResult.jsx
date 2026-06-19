@@ -24,15 +24,35 @@ export default function SubscriptionResult() {
 
   useEffect(() => {
     if (!isLoggedIn) return
-    getSubscriptionStatus()
-      .then((res) => {
-        setStatus(res.data)
-        if (res.data?.active) setIsPremium(true)
-      })
-      .catch(() => {
-        setHasError(true)
-      })
-      .finally(() => setLoading(false))
+
+    // ECPay S2S Notify 為非同步，瀏覽器跳回時 Notify 可能尚未處理完。
+    // 最多輪詢 6 次（每次 3 秒），若訂閱變 active 則提前結束。
+    let attempts = 0
+    const MAX_ATTEMPTS = 6
+    const INTERVAL_MS = 3000
+
+    const poll = () => {
+      getSubscriptionStatus()
+        .then((res) => {
+          attempts += 1
+          if (res.data?.active) {
+            setStatus(res.data)
+            setIsPremium(true)
+            setLoading(false)
+          } else if (attempts < MAX_ATTEMPTS) {
+            setTimeout(poll, INTERVAL_MS)
+          } else {
+            setStatus(res.data)
+            setLoading(false)
+          }
+        })
+        .catch(() => {
+          setHasError(true)
+          setLoading(false)
+        })
+    }
+
+    poll()
   }, [isLoggedIn, setIsPremium])
 
   // 付款結果確認後，倒數 5 秒自動跳轉
@@ -69,7 +89,10 @@ export default function SubscriptionResult() {
   return (
     <div className="container py-5 text-center" style={{ maxWidth: '560px' }}>
       {loading ? (
-        <div className="spinner-border text-primary" role="status" />
+        <div>
+          <div className="spinner-border text-primary" role="status" />
+          <p className="text-muted mt-3">正在確認付款結果，請稍候…</p>
+        </div>
       ) : !isLoggedIn ? (
         <>
           <div className="display-1 mb-3">🔒</div>
