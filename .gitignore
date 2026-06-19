@@ -50,3 +50,4 @@ frontend-react/*.tsbuildinfo
 # 其他
 keep.md
 git_tips.md
+pre-merge-notes.md
