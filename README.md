@@ -2,6 +2,10 @@
 
 個人全端練習專案，提供市場指數、財經新聞瀏覽，以及登入後的觀察名單與投資組合管理功能。
 
+🔗 **線上網址：[https://jfinancial-frontend-gghtso4rrq-de.a.run.app](https://jfinancial-frontend-gghtso4rrq-de.a.run.app)**
+
+> 部署於 Google Cloud Run（前端 + 後端），資料庫使用 Cloud SQL MySQL 8。
+
 ---
 
 ## 技術棧

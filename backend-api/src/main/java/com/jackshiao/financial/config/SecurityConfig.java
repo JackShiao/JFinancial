@@ -101,9 +101,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        // 一般 API：只允許前端 localhost（payment/** 由獨立 FilterChain 處理，不在此設定）
+        // 一般 API：只允許前端來源（payment/** 由獨立 FilterChain 處理，不在此設定）
+        // 使用 setAllowedOriginPatterns 而非 setAllowedOrigins，
+        // 才能同時支援 allowCredentials=true 與萬用字元 *（CORS 規範不允許兩者同用）
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins));
+        config.setAllowedOriginPatterns(List.of(allowedOrigins));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

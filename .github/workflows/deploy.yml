@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - CICD   # 測試用：CICD 分支 push 也觸發，確認 CD 流程正確後移除
   workflow_dispatch:
 
 # 消除 Node.js 20 deprecation 警告
