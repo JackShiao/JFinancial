@@ -1,4 +1,3 @@
-const RSS_TO_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json'
 const CACHE_INTERVAL_MS = 10 * 60 * 1000
 
 const TOPIC_RSS_URLS = {
@@ -37,9 +36,72 @@ function setCacheValue(key, value) {
   }
 }
 
-function buildNewsApiUrl(rssUrl) {
-  const params = new URLSearchParams({ rss_url: rssUrl })
-  return `${RSS_TO_JSON_ENDPOINT}?${params.toString()}`
+/**
+ * 透過自家後端 /api/news/rss 代理抓取 Google News RSS XML
+ * 避免依賴不穩定的第三方 CORS proxy
+ */
+async function fetchRssXml(rssUrl) {
+  const params = new URLSearchParams({ url: rssUrl })
+  const response = await fetch(`/api/news/rss?${params.toString()}`, {
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!response.ok) {
+    throw new Error(`RSS proxy responded with ${response.status}`)
+  }
+  const text = await response.text()
+  if (!text.includes('<rss') && !text.includes('<channel')) {
+    throw new Error('Response is not RSS XML')
+  }
+  return text
+}
+
+/**
+ * 將 RSS XML 字串解析成與原 rss2json 相容的格式
+ * { status: 'ok', items: [...] }
+ */
+function parseRssXml(xmlText) {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(xmlText, 'application/xml')
+
+  // 檢查解析錯誤
+  const parseError = doc.querySelector('parsererror')
+  if (parseError) {
+    throw new Error('Failed to parse RSS XML')
+  }
+
+  const items = Array.from(doc.querySelectorAll('item')).map((item) => {
+    const getText = (tag) => item.querySelector(tag)?.textContent?.trim() ?? ''
+
+    // 嘗試從 media:content 或 enclosure 取得圖片
+    const mediaContent = item.querySelector('content')
+    const enclosureEl = item.querySelector('enclosure')
+
+    let enclosure = null
+    if (enclosureEl) {
+      enclosure = {
+        link: enclosureEl.getAttribute('url') || '',
+        type: enclosureEl.getAttribute('type') || '',
+      }
+    } else if (mediaContent?.getAttribute('url')) {
+      enclosure = {
+        link: mediaContent.getAttribute('url'),
+        type: mediaContent.getAttribute('type') || 'image/jpeg',
+      }
+    }
+
+    return {
+      title: getText('title'),
+      pubDate: getText('pubDate'),
+      link: getText('link'),
+      guid: getText('guid') || getText('link'),
+      author: getText('author') || getText('dc\\:creator'),
+      thumbnail: mediaContent?.getAttribute('url') || '',
+      description: getText('description'),
+      enclosure,
+    }
+  })
+
+  return { status: 'ok', items }
 }
 
 export async function getGoogleNewsByTopic(topicKey) {
@@ -59,12 +121,9 @@ export async function getGoogleNewsByTopic(topicKey) {
     return cachedData
   }
 
-  const response = await fetch(buildNewsApiUrl(rssUrl))
-  if (!response.ok) {
-    throw new Error(`News request failed (${response.status})`)
-  }
+  const xmlText = await fetchRssXml(rssUrl)
+  const payload = parseRssXml(xmlText)
 
-  const payload = await response.json()
   setCacheValue(cacheKey, payload)
   localStorage.setItem(cacheTimeKey, String(now))
   return payload

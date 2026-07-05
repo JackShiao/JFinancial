@@ -74,6 +74,7 @@ public class SecurityConfig {
                 // 公開端點：認證（登入/註冊/登出）、市場指數（唯讀）、訂閱方案列表
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/market/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/subscription/plans").permitAll()
                 // /api/auth/me 需要有效 JWT（Cookie 或 Header），未登入回 401
                 .requestMatchers("/api/auth/me").authenticated()
